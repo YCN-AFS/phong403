@@ -1,0 +1,51 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+    background: url('https://i.pinimg.com/564x/76/be/2f/76be2fa4747ccadf3766e704fbc51252.jpg') no-repeat center center fixed;
+    background-size: cover;
+    animation: movingBackground 60s linear infinite;
+  }
+  
+  @keyframes movingBackground {
+    0% {
+      background-position: 0 0;
+    }
+    100% {
+      background-position: 100% 0;
+    }
+  }
+  
+  .content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  h1 {
+    color: #333;
+  }
+  
+  #clock {
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 20px;
+  }
+  
+  @media (max-width: 480px) {
+    .content {
+      padding: 10px;
+    }
+  
+    #clock {
+      font-size: 18px;
+    }
+  }
