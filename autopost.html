@@ -179,11 +179,148 @@
             0% { width: 0%; }
             100% { width: 100%; }
         }
+
+        /* Menu Styles */
+        .menu-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f6f8ff 0%, #ffffff 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .menu-title {
+            color: var(--primary-color, #4361ee);
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .menu-options {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .menu-option {
+            background: white;
+            border: 2px solid #4361ee;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 200px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #4361ee;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .menu-option:hover {
+            transform: translateY(-5px);
+            background: #4361ee;
+            color: white;
+        }
+
+        .menu-option i {
+            font-size: 2rem;
+        }
+
+        .menu-option-title {
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        .menu-option-description {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .error-message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+
+        .error-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 400px;
+            margin: 1rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .error-content i {
+            font-size: 3rem;
+            color: #f72585;
+            margin-bottom: 1rem;
+        }
+
+        .error-content p {
+            margin: 1rem 0;
+            color: #2b2d42;
+            line-height: 1.5;
+        }
+
+        .error-content button {
+            background: #4361ee;
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .error-content button:hover {
+            background: #3f37c9;
+            transform: translateY(-2px);
+        }
     </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
+    <div class="menu-container" id="menuContainer">
+        <h1 class="menu-title">Quản lý Đăng Bài Tự Động</h1>
+        <div class="menu-options">
+            <a href="https://script.google.com/macros/s/AKfycbwM4mFdKgx94ETJYckpIGfDmEXJmbL7nY3uO9tVjo0LbaFIYwDuS8OmShNKWkaCwsUXKA/exec" 
+               class="menu-option" onclick="showLoading(this.href)">
+                <i class="fas fa-plus-circle"></i>
+                <div class="menu-option-title">Thêm Bài Đăng</div>
+                <div class="menu-option-description">Tạo và lên lịch bài đăng mới</div>
+            </a>
+            <a href="https://script.google.com/macros/s/AKfycbwM4mFdKgx94ETJYckpIGfDmEXJmbL7nY3uO9tVjo0LbaFIYwDuS8OmShNKWkaCwsUXKA/exec?page=calendar" 
+               class="menu-option" onclick="showLoading(this.href)">
+                <i class="fas fa-calendar-alt"></i>
+                <div class="menu-option-title">Quản Lý Bài Đăng</div>
+                <div class="menu-option-description">Xem và quản lý lịch đăng bài</div>
+            </a>
+        </div>
+    </div>
+
     <div class="iframe-container">
-        <div class="loading">
+        <div class="loading" style="display: none;">
             <div class="calendar-3d">
                 <div class="calendar-page"></div>
             </div>
@@ -192,19 +329,81 @@
                 <div class="progress"></div>
             </div>
         </div>
-        <iframe 
-            src="https://script.google.com/macros/s/AKfycbykM-0QEky_vF6Uu6e84YETl3owCtcyrW2uTQf-PbVrmde9Ktm3aacXdyg8e1mor0268Q/exec"
-            onload="this.classList.add('loaded'); document.querySelector('.loading').style.display='none'">
-        </iframe>
+        <iframe style="display: none;"></iframe>
     </div>
 
     <script>
-        // Thêm timeout để ẩn loading
+        function showLoading(url) {
+            event.preventDefault();
+            document.querySelector('.loading').style.display = 'flex';
+            document.querySelector('#menuContainer').style.display = 'none';
+            const iframe = document.querySelector('iframe');
+            
+            // Thêm event listener để kiểm tra khi iframe load xong
+            iframe.onload = function() {
+                document.querySelector('.loading').style.display = 'none';
+                iframe.classList.add('loaded');
+            };
+
+            // Thêm event listener để bắt lỗi khi load iframe
+            iframe.onerror = function() {
+                handleError('Không thể tải được trang. Vui lòng kiểm tra kết nối mạng của bạn.');
+            };
+
+            iframe.style.display = 'block';
+            iframe.src = url;
+
+            // Kiểm tra kết nối mạng
+            checkConnection();
+        }
+
+        // Hàm kiểm tra kết nối mạng
+        function checkConnection() {
+            if (!navigator.onLine) {
+                handleError('Không có kết nối internet. Vui lòng kiểm tra lại kết nối mạng của bạn.');
+                return;
+            }
+
+            // Ping test để kiểm tra kết nối
+            const start = Date.now();
+            fetch('https://www.google.com/favicon.ico', {
+                mode: 'no-cors',
+            })
+            .then(() => {
+                const duration = Date.now() - start;
+                if (duration > 5000) {
+                    handleError('Kết nối mạng của bạn đang chậm. Có thể ảnh hưởng đến thời gian tải.');
+                }
+            })
+            .catch(() => {
+                handleError('Không thể kết nối đến server. Vui lòng thử lại sau.');
+            });
+        }
+
+        // Hàm xử lý lỗi
+        function handleError(message) {
+            document.querySelector('.loading').style.display = 'none';
+            document.querySelector('#menuContainer').style.display = 'flex';
+            document.querySelector('iframe').style.display = 'none';
+            
+            // Hiển thị thông báo lỗi
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = `
+                <div class="error-content">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>${message}</p>
+                    <button onclick="this.parentElement.parentElement.remove()">Đóng</button>
+                </div>
+            `;
+            document.body.appendChild(errorDiv);
+        }
+
+        // Thêm timeout để ẩn loading sau 30 giây
         setTimeout(() => {
             const loading = document.querySelector('.loading');
-            if (loading.style.display !== 'none') {
-                loading.style.display = 'none';
-                alert('Có vẻ như đang có vấn đề khi tải ứng dụng. Vui lòng thử lại sau.');
+            if (loading.style.display === 'flex') {
+                handleError('Quá thời gian chờ tải ứng dụng. Vui lòng thử lại sau.');
             }
         }, 30000);
 
@@ -215,6 +414,15 @@
             dots = (dots + 1) % 4;
             loadingText.textContent = 'Đang tải ứng dụng' + '.'.repeat(dots);
         }, 500);
+
+        // Lắng nghe sự kiện online/offline
+        window.addEventListener('online', () => {
+            document.querySelector('.menu-container').style.opacity = '1';
+        });
+        
+        window.addEventListener('offline', () => {
+            handleError('Mất kết nối internet. Vui lòng kiểm tra lại kết nối mạng của bạn.');
+        });
     </script>
 </body>
 </html>
