@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Bot LHU</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 450px;
+            height: 600px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #4a69bd;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fb;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            text-align: right;
+        }
+
+        .assistant-message {
+            text-align: left;
+        }
+
+        .message-content {
+            display: inline-block;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .user-message .message-content {
+            background: #4a69bd;
+            color: white;
+        }
+
+        .assistant-message .message-content {
+            background: #e4e6ea;
+            color: #333;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #4a69bd;
+        }
+
+        .send-button {
+            padding: 12px 20px;
+            background: #4a69bd;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .send-button:hover {
+            background: #3c5499;
+        }
+
+        .send-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: none;
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .typing-indicator .message-content {
+            background: #e4e6ea;
+            color: #333;
+        }
+
+        .typing-dots {
+            display: inline-block;
+        }
+
+        .typing-dots span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            margin: 0 2px;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+            40% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .error-message {
+            background: #ff6b6b;
+            color: white;
+            padding: 10px;
+            margin: 10px 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .connection-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff6b6b;
+        }
+
+        .connection-status.connected {
+            background: #51cf66;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            Chat Bot LHU
+            <div class="connection-status" id="connectionStatus"></div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message assistant-message">
+                <div class="message-content">
+                    Xin chào! Tôi là Chat Bot LHU. Tôi có thể giúp bạn tìm hiểu về trường Đại học Lakehead University. Bạn muốn hỏi gì?
+                </div>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="message-content">
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Nhập tin nhắn của bạn..." maxlength="500">
+            <button class="send-button" id="sendButton">Gửi</button>
+        </div>
+    </div>
+
+    <script>
+        class ChatBot {
+            constructor() {
+                this.messages = [
+                    {
+                        role: "assistant",
+                        content: "Xin chào! Tôi là Chat Bot LHU. Tôi có thể giúp bạn tìm hiểu về trường Đại học Lakehead University. Bạn muốn hỏi gì?"
+                    }
+                ];
+                this.apiUrl = "http://116.118.50.179:5000/api/chat";
+                this.apiKey = "58d754ad7b21c9f40be04e17c0ff1ad7fd9a24560ce6ffbc";
+                this.agentId = "07fcdda9-c6ac-483d-8b0e-bbf5dd9c75ff";
+                
+                this.chatMessages = document.getElementById('chatMessages');
+                this.chatInput = document.getElementById('chatInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.typingIndicator = document.getElementById('typingIndicator');
+                this.connectionStatus = document.getElementById('connectionStatus');
+
+                this.initializeEventListeners();
+                this.testConnection();
+            }
+
+            initializeEventListeners() {
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.sendMessage();
+                    }
+                });
+
+                this.chatInput.addEventListener('input', () => {
+                    this.sendButton.disabled = this.chatInput.value.trim() === '';
+                });
+            }
+
+            async testConnection() {
+                try {
+                    const response = await fetch(this.apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-Key': this.apiKey
+                        },
+                        body: JSON.stringify({
+                            agent_id: this.agentId,
+                            message: [{
+                                role: "user",
+                                content: "test"
+                            }]
+                        })
+                    });
+
+                    if (response.ok) {
+                        this.connectionStatus.classList.add('connected');
+                    }
+                } catch (error) {
+                    console.log('Connection test failed:', error);
+                }
+            }
+
+            async sendMessage() {
+                const message = this.chatInput.value.trim();
+                if (!message) return;
+
+                // Thêm tin nhắn của user
+                this.addMessage('user', message);
+                this.messages.push({ role: "user", content: message });
+
+                // Clear input và disable button
+                this.chatInput.value = '';
+                this.sendButton.disabled = true;
+
+                // Hiển thị typing indicator
+                this.showTypingIndicator();
+
+                try {
+                    const response = await fetch(this.apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-Key': this.apiKey
+                        },
+                        body: JSON.stringify({
+                            agent_id: this.agentId,
+                            message: this.messages
+                        })
+                    });
+
+                    this.hideTypingIndicator();
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('API Response:', data); // Debug log
+                        
+                        let botResponse = 'Xin lỗi, tôi không thể trả lời lúc này.';
+                        
+                        // Xử lý các định dạng response khác nhau
+                        if (typeof data === 'string') {
+                            botResponse = data;
+                        } else if (data.message) {
+                            if (typeof data.message === 'string') {
+                                botResponse = data.message;
+                            } else if (data.message.content) {
+                                botResponse = data.message.content;
+                            } else if (Array.isArray(data.message) && data.message.length > 0) {
+                                // Nếu message là array, lấy content của phần tử cuối
+                                const lastMessage = data.message[data.message.length - 1];
+                                botResponse = lastMessage.content || lastMessage;
+                            }
+                        } else if (data.response) {
+                            botResponse = data.response;
+                        } else if (data.content) {
+                            botResponse = data.content;
+                        } else if (data.text) {
+                            botResponse = data.text;
+                        }
+                        
+                        // Đảm bảo botResponse là string
+                        if (typeof botResponse !== 'string') {
+                            botResponse = JSON.stringify(botResponse);
+                        }
+                        
+                        this.addMessage('assistant', botResponse);
+                        this.messages.push({ role: "assistant", content: botResponse });
+                        this.connectionStatus.classList.add('connected');
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) {
+                    this.hideTypingIndicator();
+                    this.connectionStatus.classList.remove('connected');
+                    
+                    let errorMessage = 'Xin lỗi, có lỗi xảy ra khi kết nối với server. ';
+                    
+                    if (error.message.includes('Failed to fetch')) {
+                        errorMessage += 'Vui lòng kiểm tra kết nối internet hoặc thử lại sau.';
+                    } else {
+                        errorMessage += error.message;
+                    }
+                    
+                    this.showError(errorMessage);
+                }
+
+                // Re-enable button
+                this.sendButton.disabled = false;
+                this.chatInput.focus();
+            }
+
+            addMessage(role, content) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${role}-message`;
+                
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.textContent = content;
+                
+                messageDiv.appendChild(messageContent);
+                this.chatMessages.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            showTypingIndicator() {
+                this.typingIndicator.style.display = 'block';
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            hideTypingIndicator() {
+                this.typingIndicator.style.display = 'none';
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = message;
+                
+                this.chatMessages.appendChild(errorDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+
+                // Remove error after 5 seconds
+                setTimeout(() => {
+                    if (errorDiv.parentNode) {
+                        errorDiv.parentNode.removeChild(errorDiv);
+                    }
+                }, 5000);
+            }
+        }
+
+        // Initialize chatbot when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new ChatBot();
+        });
+    </script>
+</body>
+</html>
