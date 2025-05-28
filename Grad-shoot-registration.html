@@ -1,0 +1,520 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Đăng ký chụp hình tốt nghiệp 6-2025 - Share for Happy">
+  <title>Đăng Ký Chụp Hình Tốt Nghiệp 6-2025</title>
+  <link rel="icon" type="image/png" href="https://via.placeholder.com/32.png?text=S4H">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(45deg, #bfdbfe, #fefce8, #bfdbfe);
+      background-size: 400%;
+      animation: gradient 15s ease infinite;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .banner {
+      background: url('https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
+      background-size: cover;
+      height: 200px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      animation: fadeIn 1s ease-in;
+    }
+    .form-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      animation: fadeIn 1s ease-in 0.3s both;
+    }
+    .form-field {
+      position: relative;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideUp 0.5s ease forwards;
+    }
+    .form-field:nth-child(1) { animation-delay: 0.1s; }
+    .form-field:nth-child(2) { animation-delay: 0.2s; }
+    .form-field:nth-child(3) { animation-delay: 0.3s; }
+    .form-field:nth-child(4) { animation-delay: 0.4s; }
+    .form-field input, .form-field select, .form-field textarea {
+      transition: all 0.3s ease;
+    }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 8px rgba(37,99,235,0.3);
+      transform: scale(1.02);
+    }
+    .form-field:hover input, .form-field:hover select, .form-field:hover textarea {
+      transform: scale(1.02);
+    }
+    .error {
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 8px rgba(239,68,68,0.3) !important;
+    }
+    .error-message {
+      color: #ef4444;
+      font-size: 0.875rem;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+    }
+    .error-message i {
+      margin-right: 4px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      animation: bounceIn 0.5s ease;
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #2563eb;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      display: none;
+      margin: 0 auto;
+    }
+    .progress-bar {
+      height: 6px;
+      background: #e5e7eb;
+      border-radius: 3px;
+      overflow: hidden;
+      animation: fadeIn 1s ease-in 0.5s both;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: #2563eb;
+      transition: width 0.3s ease;
+    }
+    .tooltip {
+      position: absolute;
+      background: #1f2937;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      display: none;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+    }
+    .form-field:hover .tooltip {
+      display: block;
+    }
+    /* Sakura Falling Effect */
+    .sakura {
+      position: absolute;
+      background: url('https://www.pngall.com/wp-content/uploads/2016/05/Cherry-Blossom-PNG-Picture.png') no-repeat center center;
+      background-size: contain;
+      width: 20px;
+      height: 20px;
+      opacity: 0.7;
+      animation: fall linear infinite;
+      pointer-events: none;
+      z-index: 5;
+    }
+    @keyframes fall {
+      0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 0.7;
+      }
+      100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0.3;
+      }
+    }
+    /* Animation Keyframes */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes bounceIn {
+      0% { transform: scale(0.7); opacity: 0; }
+      50% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* Responsive Adjustments */
+    @media (max-width: 640px) {
+      .banner {
+        height: 150px;
+      }
+      .banner h1 {
+        font-size: 1.5rem;
+      }
+      .form-container {
+        padding: 1rem;
+      }
+      .form-field input, .form-field select, .form-field textarea {
+        padding: 0.5rem;
+      }
+      .form-field label {
+        font-size: 0.875rem;
+      }
+      button {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+      }
+      .sakura {
+        width: 15px;
+        height: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="sakura-container"></div>
+  <div class="container mx-auto max-w-3xl p-4 sm:p-6">
+    <div class="banner">
+      <h1 class="text-2xl sm:text-3xl font-bold">Đăng Ký Chụp Hình Tốt Nghiệp 6-2025</h1>
+    </div>
+    <div class="form-container mt-6 p-4 sm:p-8">
+      <p class="text-gray-600 mb-4 text-sm sm:text-base">Vui lòng điền đầy đủ thông tin bên dưới. Sau khi đăng ký, hãy tham gia nhóm Zalo để kiểm tra thông tin.</p>
+      <div class="flex items-center mb-4">
+        <strong class="mr-2 text-sm sm:text-base">Link Zalo:</strong>
+        <a href="https://zalo.me/g/pohulr833" class="text-blue-600 hover:underline" target="_blank">https://zalo.me/g/pohulr833</a>
+        <button onclick="navigator.clipboard.writeText('https://zalo.me/g/pohulr833'); showModal('Sao chép thành công', 'Link Zalo đã được sao chép!')" class="ml-2 text-blue-600 hover:text-blue-800"><i class="fas fa-copy"></i></button>
+      </div>
+      <p class="mb-6 text-sm sm:text-base"><strong>Địa điểm chụp:</strong> <a href="https://maps.app.goo.gl/Uwg2CkyD2xfStkMa7" class="text-blue-600 hover:underline" target="_blank">Google Maps</a></p>
+
+      <div class="progress-bar mb-6">
+        <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
+      </div>
+
+      <form id="graduation-form" class="space-y-6">
+        <div>
+          <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Thông tin cá nhân</h2>
+          <div class="space-y-4">
+            <div class="form-field">
+              <label class="block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
+              <input type="email" name="email" class="mt-1 block w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200" required>
+              <span class="tooltip">Ví dụ: example@domain.com</span>
+              <p class="error-message" id="email-error"><i class="fas fa-exclamation-circle"></i></p>
+            </div>
+            <div class="form-field">
+              <label class="block text-sm font-medium text-gray-700">Họ và Tên <span class="text-red-500">*</span></label>
+              <input type="text" name="full_name" class="mt-1 block w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200" required>
+              <span class="tooltip">Nhập đầy đủ họ tên</span>
+            </div>
+            <div class="form-field">
+              <label class="block text-sm font-medium text-gray-700">Năm Sinh <span class="text-red-500">*</span></label>
+              <input type="number" name="birth_year" class="mt-1 block w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200" required min="1900" max="2025">
+              <span class="tooltip">Nhập năm sinh từ 1900 đến 2025</span>
+              <p class="error-message" id="birth_year-error"><i class="fas fa-exclamation-circle"></i></p>
+            </div>
+            <div class="form-field">
+              <label class="block text-sm font-medium text-gray-700">Số Điện Thoại <span class="text-red-500">*</span></label>
+              <input type="tel" name="phone_number" class="mt-1 block w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200" required>
+              <span class="tooltip">Nhập số điện thoại 10-11 chữ số</span>
+              <p class="error-message" id="phone_number-error"><i class="fas fa-exclamation-circle"></i></p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Thông tin học tập</h2>
+          <div class="space-y-4">
+            <div class="form-field">
+              <label class="block text-sm font-medium text-gray-700">Khóa <span class="text-red-500">*</span></label>
+              <input type="text" name="course" class="mt-1 block w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200" required>
+              <span class="tooltip">Ví dụ: K46</span>
+            </div>
+            <div class="form-field">
+              <label class="block text-sm font-medium text-gray-700">Lớp <span class="text-red-500">*</span></label>
+              <input type="text" name="class" class="mt-1 block w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200" required>
+              <span class="tooltip">Ví dụ: CNTT01</span>
+            </div>
+            <div class="form-field">
+              <label class="block text-sm font-medium text-gray-700">Khoa <span class="text-red-500">*</span></label>
+              <select name="faculty" class="mt-1 block w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200" required>
+                <option value="">Chọn khoa</option>
+                <option value="Khoa Công nghệ Thông Tin">Khoa Công nghệ Thông Tin</option>
+                <option value="Khoa Tài Chính Kế Toán">Khoa Tài Chính Kế Toán</option>
+                <option value="Khoa Học và Công Nghệ Thực Phẩm">Khoa Học và Công Nghệ Thực Phẩm</option>
+                <option value="Khoa Kỹ Thuật Công Trình">Khoa Kỹ Thuật Công Trình</option>
+                <option value="Khoa Cơ Điện, Điện Tử">Khoa Cơ Điện, Điện Tử</option>
+                <option value="Khoa Ngôn Ngữ Anh">Khoa Ngôn Ngữ Anh</option>
+                <option value="Khoa Dược">Khoa Dược</option>
+                <option value="Khoa Đông Phương Học">Khoa Đông Phương Học</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="block text-sm font-medium text-gray-700">Loại Tốt Nghiệp <span class="text-red-500">*</span></label>
+              <select name="graduation_type" class="mt-1 block w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200" required>
+                <option value="">Chọn loại</option>
+                <option value="Kỹ Sư">Kỹ Sư</option>
+                <option value="Cử Nhân">Cử Nhân</option>
+                <option value="Thạc Sĩ">Thạc Sĩ</option>
+                <option value="Tiến Sĩ">Tiến Sĩ</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Lịch chụp hình</h2>
+          <div class="space-y-4">
+            <div class="form-field">
+              <label class="block text-sm font-medium text-gray-700">Ngày Chụp <span class="text-red-500">*</span></label>
+              <select name="shooting_date" class="mt-1 block w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200" required>
+                <option value="">Chọn ngày</option>
+                <option value="1.6.2025">1.6.2025</option>
+                <option value="2.6.2025">2.6.2025</option>
+                <option value="3.6.2025">3.6.2025</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="block text-sm font-medium text-gray-700">Thời Gian Chụp <span class="text-red-500">*</span></label>
+              <input type="time" name="shooting_time" class="mt-1 block w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200" required>
+              <span class="tooltip">Chọn giờ chụp (VD: 09:00)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="block text-sm font-medium text-gray-700">Ghi Chú</label>
+          <textarea name="note" class="mt-1 block w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200" rows="4"></textarea>
+          <span class="tooltip">Thêm ghi chú nếu cần (tùy chọn)</span>
+        </div>
+
+        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+          <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 pulse transition flex items-center justify-center">
+            <span>Gửi</span>
+            <div id="spinner" class="spinner ml-2"></div>
+          </button>
+          <button type="button" id="reset-form" class="bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 pulse transition">Xóa Form</button>
+        </div>
+      </form>
+
+      <p class="text-gray-500 text-sm mt-6">Không bao giờ gửi mật khẩu qua biểu mẫu này. Biểu mẫu được tạo bởi <strong>Share for Happy</strong>.</p>
+    </div>
+  </div>
+
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <i id="modal-icon" class="fas fa-2x mb-4"></i>
+      <h2 id="modal-title" class="text-xl font-semibold"></h2>
+      <p id="modal-message" class="mt-2"></p>
+      <button id="modal-close" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 pulse">Đóng</button>
+    </div>
+  </div>
+
+  <script>
+    // Sakura Falling Effect
+    const sakuraContainer = document.getElementById('sakura-container');
+    function createSakura() {
+      const sakura = document.createElement('div');
+      sakura.className = 'sakura';
+      sakura.style.left = Math.random() * 100 + 'vw';
+      sakura.style.animationDuration = Math.random() * 5 + 5 + 's'; // 5-10s
+      sakura.style.width = (Math.random() * 10 + 10) + 'px'; // 10-20px
+      sakura.style.height = sakura.style.width;
+      sakuraContainer.appendChild(sakura);
+      setTimeout(() => sakura.remove(), 10000); // Remove after 10s
+    }
+    // Create fewer sakura petals on mobile
+    const isMobile = window.innerWidth <= 640;
+    const sakuraCount = isMobile ? 5 : 10; // Fewer petals on mobile
+    setInterval(createSakura, 1000 / sakuraCount);
+
+    // Form Handling
+    const form = document.getElementById('graduation-form');
+    const resetButton = document.getElementById('reset-form');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMessage = document.getElementById('modal-message');
+    const modalIcon = document.getElementById('modal-icon');
+    const modalClose = document.getElementById('modal-close');
+    const spinner = document.getElementById('spinner');
+    const progressBarFill = document.getElementById('progress-bar-fill');
+
+    function showModal(title, message, isError = false) {
+      modalTitle.textContent = title;
+      modalMessage.textContent = message;
+      modalIcon.className = `fas fa-2x mb-4 ${isError ? 'fa-exclamation-circle text-red-600' : 'fa-check-circle text-green-600'}`;
+      modal.style.display = 'flex';
+    }
+
+    modalClose.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    resetButton.addEventListener('click', () => {
+      form.reset();
+      document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+      document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+      updateProgressBar();
+    });
+
+    function updateProgressBar() {
+      const inputs = form.querySelectorAll('input, select, textarea');
+      let filled = 0;
+      inputs.forEach(input => {
+        if (input.value && input.type !== 'submit' && input.type !== 'button') filled++;
+      });
+      const progress = (filled / (inputs.length - 2)) * 100; // Subtract submit and reset buttons
+      progressBarFill.style.width = `${progress}%`;
+    }
+
+    form.querySelectorAll('input, select, textarea').forEach(input => {
+      input.addEventListener('input', updateProgressBar);
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      let isValid = true;
+
+      // Reset error states
+      document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+      document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+
+      // Collect form data
+      const formData = new FormData(form);
+      const data = {
+        email: formData.get('email'),
+        full_name: formData.get('full_name'),
+        birth_year: parseInt(formData.get('birth_year')),
+        course: formData.get('course'),
+        class: formData.get('class'),
+        faculty: formData.get('faculty'),
+        phone_number: formData.get('phone_number'),
+        graduation_type: formData.get('graduation_type'),
+        shooting_date: formData.get('shooting_date'),
+        shooting_time: formData.get('shooting_time'),
+        note: formData.get('note') || ''
+      };
+
+      // Validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data.email)) {
+        document.querySelector('input[name="email"]').classList.add('error');
+        document.getElementById('email-error').innerHTML = '<i class="fas fa-exclamation-circle"></i> Vui lòng nhập email hợp lệ.';
+        isValid = false;
+      }
+
+      const phoneRegex = /^[0-9]{10,11}$/;
+      if (!phoneRegex.test(data.phone_number)) {
+        document.querySelector('input[name="phone_number"]').classList.add('error');
+        document.getElementById('phone_number-error').innerHTML = '<i class="fas fa-exclamation-circle"></i> Số điện thoại phải có 10-11 chữ số.';
+        isValid = false;
+      }
+
+      if (data.birth_year < 1900 || data.birth_year > 2025) {
+        document.querySelector('input[name="birth_year"]').classList.add('error');
+        document.getElementById('birth_year-error').innerHTML = '<i class="fas fa-exclamation-circle"></i> Năm sinh phải từ 1900 đến 2025.';
+        isValid = false;
+      }
+
+      if (!isValid) return;
+
+      spinner.style.display = 'block';
+      try {
+        const response = await fetch('https://auto.s4h.edu.vn/webhook-test/dcb1e9cd-bf0d-4330-9115-0a3552f38961', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        spinner.style.display = 'none';
+        if (response.ok) {
+          showModal('Đăng ký thành công', 'Thông tin của bạn đã được gửi. Vui lòng kiểm tra nhóm Zalo để xác nhận.');
+          form.reset();
+          updateProgressBar();
+        } else {
+          showModal('Lỗi', 'Có lỗi xảy ra khi gửi dữ liệu. Vui lòng thử lại.', true);
+        }
+      } catch (error) {
+        spinner.style.display = 'none';
+        showModal('Lỗi', 'Không thể kết nối tới server. Vui lòng kiểm tra kết nối mạng.', true);
+      }
+    });
+
+    updateProgressBar();
+  </script>
+</body>
+</html>
