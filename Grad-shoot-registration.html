@@ -387,7 +387,7 @@
 
     function showModal(title, message, isError = false) {
       modalTitle.textContent = title;
-      modalMessage.textContent = message;
+      modalMessage.innerHTML = message;
       modalIcon.className = `fas fa-2x mb-4 ${isError ? 'fa-exclamation-circle text-red-600' : 'fa-check-circle text-green-600'}`;
       modal.style.display = 'flex';
     }
