@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -398,7 +359,6 @@
       sakuraContainer.appendChild(sakura);
       setTimeout(() => sakura.remove(), 10000); // Remove after 10s
     }
-    // Create fewer sakura petals on mobile
     const isMobile = window.innerWidth <= 640;
     const sakuraCount = isMobile ? 5 : 10; // Fewer petals on mobile
     setInterval(createSakura, 1000 / sakuraCount);
@@ -413,6 +373,17 @@
     const modalClose = document.getElementById('modal-close');
     const spinner = document.getElementById('spinner');
     const progressBarFill = document.getElementById('progress-bar-fill');
+
+    function formatDateTime(date) {
+      const pad = (num) => String(num).padStart(2, '0');
+      const day = pad(date.getDate());
+      const month = pad(date.getMonth() + 1);
+      const year = date.getFullYear();
+      const hours = pad(date.getHours());
+      const minutes = pad(date.getMinutes());
+      const seconds = pad(date.getSeconds());
+      return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+    }
 
     function showModal(title, message, isError = false) {
       modalTitle.textContent = title;
@@ -467,7 +438,8 @@
         graduation_type: formData.get('graduation_type'),
         shooting_date: formData.get('shooting_date'),
         shooting_time: formData.get('shooting_time'),
-        note: formData.get('note') || ''
+        note: formData.get('note') || '',
+        submission_time: formatDateTime(new Date()) // Add submission time
       };
 
       // Validation
