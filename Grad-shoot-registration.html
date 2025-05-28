@@ -474,10 +474,11 @@
         });
         spinner.style.display = 'none';
         if (response.ok) {
-          showModal(
-  'Đăng ký thành công',
-  'Thông tin của bạn đã được gửi. Vui lòng <a href="https://zalo.me/g/pohulr833" target="_blank" rel="noopener noreferrer">vào nhóm Zalo này</a> để xác nhận.'
-);
+            showModal(
+              'Đăng ký thành công',
+              'Thông tin của bạn đã được gửi. Vui lòng <a href="https://zalo.me/g/pohulr833" target="_blank" rel="noopener noreferrer" style="color: #007bff; font-weight: bold; text-decoration: underline;">vào nhóm Zalo này</a> để xác nhận.'
+            );
+
 
           form.reset();
           updateProgressBar();
