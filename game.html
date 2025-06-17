@@ -1,0 +1,462 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Game Thủ Thành Đẹp Mắt - Di Động</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f3f4f6;
+      -webkit-tap-highlight-color: transparent;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: linear-gradient(to bottom, #93c5fd, #fefcbf);
+      border-radius: 8px;
+      touch-action: none;
+    }
+    .glow {
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+    }
+    .pulse {
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    .explode {
+      animation: explode 0.3s forwards;
+    }
+    @keyframes explode {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+<body class="font-sans">
+  <div class="container mx-auto p-2 sm:p-4 max-w-screen-md">
+    <h1 class="text-2xl sm:text-3xl font-bold text-center text-blue-800 mb-2 sm:mb-4">Game Thủ Thành</h1>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2 sm:mb-4 text-sm sm:text-base">
+      <div class="bg-white p-2 rounded-lg shadow text-center">
+        Tiền: <span id="money" class="font-bold text-yellow-600">200</span>
+      </div>
+      <div class="bg-white p-2 rounded-lg shadow text-center">
+        Điểm: <span id="score" class="font-bold text-green-600">0</span>
+      </div>
+      <div class="bg-white p-2 rounded-lg shadow text-center">
+        Máu: <span id="health" class="font-bold text-red-600">100</span>
+      </div>
+      <div class="bg-white p-2 rounded-lg shadow text-center">
+        Sóng: <span id="wave" class="font-bold text-purple-600">1</span>
+      </div>
+    </div>
+    <div class="flex flex-wrap justify-center gap-2 mb-2 sm:mb-4">
+      <button onclick="selectTowerType('fast')" class="bg-blue-500 hover:bg-blue-600 text-white text-sm sm:text-base px-3 sm:px-4 py-2 rounded-lg pulse">Tháp Nhanh (50)</button>
+      <button onclick="selectTowerType('heavy')" class="bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base px-3 sm:px-4 py-2 rounded-lg pulse">Tháp Nặng (80)</button>
+      <button onclick="upgradeSelectedTower()" class="bg-yellow-500 hover:bg-yellow-600 text-white text-sm sm:text-base px-3 sm:px-4 py-2 rounded-lg pulse">Nâng cấp (100)</button>
+    </div>
+    <div id="towerInfo" class="text-center text-gray-700 text-sm sm:text-base mb-2 sm:mb-4"></div>
+    <canvas id="gameCanvas"></canvas>
+    <p class="text-center text-xs sm:text-sm text-gray-600 mt-2">Chạm để đặt tháp, chạm tháp để chọn và nâng cấp.</p>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Điều chỉnh kích thước canvas
+    function resizeCanvas() {
+      const maxWidth = window.innerWidth * 0.95;
+      const maxHeight = window.innerHeight * 0.6;
+      const aspectRatio = 800 / 600;
+      let width = maxWidth;
+      let height = maxWidth / aspectRatio;
+      if (height > maxHeight) {
+        height = maxHeight;
+        width = maxHeight * aspectRatio;
+      }
+      canvas.width = width;
+      canvas.height = height;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    let money = 200;
+    let score = 0;
+    let health = 100;
+    let wave = 1;
+    let enemiesToSpawn = 5;
+    let spawnDelay = 0;
+    let selectedTowerType = 'fast';
+    let selectedTower = null;
+    let explosions = [];
+
+    const scaleX = canvas.width / 800;
+    const scaleY = canvas.height / 600;
+    const path = [
+      { x: 0, y: 450 },
+      { x: 150, y: 450 },
+      { x: 150, y: 250 },
+      { x: 350, y: 250 },
+      { x: 350, y: 500 },
+      { x: 550, y: 500 },
+      { x: 550, y: 150 },
+      { x: 800, y: 150 }
+    ].map(p => ({ x: p.x * scaleX, y: p.y * scaleY }));
+
+    let enemies = [];
+    let towers = [];
+    let projectiles = [];
+
+    const enemyTypes = {
+      normal: { health: 50, speed: 2 * scaleX, reward: 20, color: '#ef4444', size: 12 * scaleX },
+      fast: { health: 30, speed: 3.5 * scaleX, reward: 15, color: '#a855f7', size: 10 * scaleX },
+      tank: { health: 100, speed: 1 * scaleX, reward: 30, color: '#78350f', size: 15 * scaleX }
+    };
+
+    const towerTypes = {
+      fast: { range: 100 * scaleX, fireRate: 30, damage: 20, cost: 50, color: '#3b82f6' },
+      heavy: { range: 150 * scaleX, fireRate: 60, damage: 50, cost: 80, color: '#15803d' }
+    };
+
+    class Enemy {
+      constructor(type) {
+        this.x = path[0].x;
+        this.y = path[0].y;
+        this.type = type;
+        this.health = enemyTypes[type].health;
+        this.speed = enemyTypes[type].speed;
+        this.pathIndex = 0;
+        this.animationFrame = 0;
+      }
+
+      update() {
+        this.animationFrame += 0.1;
+        if (this.pathIndex < path.length - 1) {
+          const target = path[this.pathIndex + 1];
+          const dx = target.x - this.x;
+          const dy = target.y - this.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance < this.speed) {
+            this.pathIndex++;
+            if (this.pathIndex >= path.length - 1) {
+              health -= 10;
+              return false;
+            }
+          } else {
+            this.x += (dx / distance) * this.speed;
+            this.y += (dy / distance) * this.speed;
+          }
+        }
+        return true;
+      }
+
+      draw() {
+        const size = enemyTypes[this.type].size * (1 + 0.1 * Math.sin(this.animationFrame));
+        ctx.fillStyle = enemyTypes[this.type].color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = 'white';
+        ctx.font = `${10 * scaleX}px Arial`;
+        ctx.fillText(this.health, this.x - 10 * scaleX, this.y - 15 * scaleY);
+      }
+    }
+
+    class Tower {
+      constructor(x, y, type) {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.level = 1;
+        this.range = towerTypes[type].range;
+        this.fireRate = towerTypes[type].fireRate;
+        this.damage = towerTypes[type].damage;
+        this.cooldown = 0;
+        this.animationFrame = 0;
+      }
+
+      upgrade() {
+        if (this.level < 3 && money >= 100) {
+          this.level++;
+          this.range += 20 * scaleX;
+          this.damage += 10;
+          this.fireRate = Math.max(10, this.fireRate - 10);
+          money -= 100;
+          updateTowerInfo();
+        }
+      }
+
+      update() {
+        this.animationFrame += 0.05;
+        if (this.cooldown > 0) this.cooldown--;
+        let target = null;
+        let minDistance = this.range;
+        for (let enemy of enemies) {
+          const distance = Math.sqrt((this.x - enemy.x) ** 2 + (this.y - enemy.y) ** 2);
+          if (distance < minDistance) {
+            minDistance = distance;
+            target = enemy;
+          }
+        }
+        if (target && this.cooldown === 0) {
+          projectiles.push(new Projectile(this.x, this.y, target, this.damage));
+          this.cooldown = this.fireRate;
+        }
+      }
+
+      draw() {
+        const size = 30 * scaleX + 2 * scaleX * Math.sin(this.animationFrame);
+        ctx.fillStyle = towerTypes[this.type].color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, size / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2 * scaleX;
+        ctx.stroke();
+        ctx.fillStyle = 'white';
+        ctx.font = `${10 * scaleX}px Arial`;
+        ctx.fillText(`Lv${this.level}`, this.x - 10 * scaleX, this.y + 5 * scaleY);
+        if (this === selectedTower) {
+          ctx.strokeStyle = 'yellow';
+          ctx.lineWidth = 2 * scaleX;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.range, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+    }
+
+    class Projectile {
+      constructor(x, y, target, damage) {
+        this.x = x;
+        this.y = y;
+        this.target = target;
+        this.damage = damage;
+        this.speed = 7 * scaleX;
+      }
+
+      update() {
+        if (!this.target) return false;
+        const dx = this.target.x - this.x;
+        const dy = this.target.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < this.speed) {
+          this.target.health -= this.damage;
+          if (this.target.health <= 0) {
+            const index = enemies.indexOf(this.target);
+            if (index > -1) {
+              enemies.splice(index, 1);
+              score += 10;
+              money += enemyTypes[this.target.type].reward;
+              explosions.push({ x: this.target.x, y: this.target.y, frame: 0 });
+            }
+          }
+          return false;
+        }
+        this.x += (dx / distance) * this.speed;
+        this.y += (dy / distance) * this.speed;
+        return true;
+      }
+
+      draw() {
+        ctx.fillStyle = 'orange';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 5 * scaleX, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 1 * scaleX;
+        ctx.stroke();
+      }
+    }
+
+    function drawMap() {
+      ctx.strokeStyle = '#4b2c20';
+      ctx.lineWidth = 30 * scaleX;
+      ctx.beginPath();
+      ctx.moveTo(path[0].x, path[0].y);
+      for (let i = 1; i < path.length; i++) {
+        ctx.lineTo(path[i].x, path[i].y);
+      }
+      ctx.stroke();
+      ctx.strokeStyle = '#15803d';
+      ctx.lineWidth = 10 * scaleX;
+      ctx.beginPath();
+      ctx.moveTo(path[0].x, path[0].y + 20 * scaleY);
+      for (let i = 1; i < path.length; i++) {
+        ctx.lineTo(path[i].x, path[i].y + 20 * scaleY);
+      }
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(path[0].x, path[0].y - 20 * scaleY);
+      for (let i = 1; i < path.length; i++) {
+        ctx.lineTo(path[i].x, path[i].y - 20 * scaleY);
+      }
+      ctx.stroke();
+      ctx.fillStyle = '#15803d';
+      ctx.beginPath();
+      ctx.arc(100 * scaleX, 100 * scaleY, 20 * scaleX, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(700 * scaleX, 500 * scaleY, 25 * scaleX, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#6b7280';
+      ctx.fillRect(600 * scaleX, 50 * scaleY, 30 * scaleX, 30 * scaleY);
+      ctx.fillRect(200 * scaleX, 550 * scaleY, 40 * scaleX, 20 * scaleY);
+    }
+
+    function drawExplosions() {
+      explosions = explosions.filter(ex => ex.frame < 10);
+      for (let ex of explosions) {
+        ctx.fillStyle = `rgba(255, 69, 0, ${1 - ex.frame / 10})`;
+        ctx.beginPath();
+        ctx.arc(ex.x, ex.y, (10 + ex.frame * 2) * scaleX, 0, Math.PI * 2);
+        ctx.fill();
+        ex.frame++;
+      }
+    }
+
+    function selectTowerType(type) {
+      selectedTowerType = type;
+      updateTowerInfo();
+    }
+
+    function upgradeSelectedTower() {
+      if (selectedTower) {
+        selectedTower.upgrade();
+      }
+    }
+
+    function updateTowerInfo() {
+      const towerInfo = document.getElementById('towerInfo');
+      if (selectedTower) {
+        towerInfo.textContent = `Tháp chọn: ${selectedTower.type}, Cấp ${selectedTower.level}, Sát thương: ${selectedTower.damage}`;
+      } else {
+        towerInfo.textContent = `Tháp đang chọn: ${selectedTowerType}. Chạm để đặt tháp.`;
+      }
+    }
+
+    function spawnEnemy() {
+      if (enemiesToSpawn > 0 && spawnDelay <= 0) {
+        const types = Object.keys(enemyTypes);
+        const type = types[Math.floor(Math.random() * types.length)];
+        enemies.push(new Enemy(type));
+        enemiesToSpawn--;
+        spawnDelay = 60;
+      } else if (enemies.length === 0 && enemiesToSpawn === 0) {
+        wave++;
+        enemiesToSpawn = 5 + wave * 2;
+        spawnDelay = 120;
+        document.getElementById('wave').textContent = wave;
+      }
+      if (spawnDelay > 0) spawnDelay--;
+    }
+
+    function updateGame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawMap();
+      spawnEnemy();
+      enemies = enemies.filter(enemy => enemy.update());
+      for (let enemy of enemies) {
+        enemy.draw();
+      }
+      for (let tower of towers) {
+        tower.update();
+        tower.draw();
+      }
+      projectiles = projectiles.filter(projectile => projectile.update());
+      for (let projectile of projectiles) {
+        projectile.draw();
+      }
+      drawExplosions();
+      document.getElementById('money').textContent = money;
+      document.getElementById('score').textContent = score;
+      document.getElementById('health').textContent = health;
+      if (health <= 0) {
+        alert('Game Over! Điểm: ' + score + ', Sóng: ' + wave);
+        location.reload();
+      }
+    }
+
+    canvas.addEventListener('touchstart', (event) => {
+      event.preventDefault();
+      const touch = event.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = (touch.clientX - rect.left) * (canvas.width / rect.width);
+      const y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+      let clickedTower = null;
+      for (let tower of towers) {
+        if (Math.abs(tower.x - x) < 20 * scaleX && Math.abs(tower.y - y) < 20 * scaleY) {
+          clickedTower = tower;
+          break;
+        }
+      }
+      if (clickedTower) {
+        selectedTower = clickedTower;
+        updateTowerInfo();
+      } else if (money >= towerTypes[selectedTowerType].cost) {
+        towers.push(new Tower(x, y, selectedTowerType));
+        money -= towerTypes[selectedTowerType].cost;
+        selectedTower = null;
+        updateTowerInfo();
+      }
+    });
+
+    setInterval(updateGame, 1000 / 60);
+    updateTowerInfo();
+  </script>
+</body>
+</html>
