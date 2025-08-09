@@ -243,6 +243,31 @@
             border: 1px solid #f5c6cb;
         }
 
+        .required {
+            color: #e74c3c;
+            font-weight: bold;
+            margin-left: 3px;
+        }
+
+        .form-control.invalid {
+            border-color: #e74c3c !important;
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1) !important;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.875em;
+            margin-top: 5px;
+            display: none;
+        }
+
         .loading {
             display: inline-block;
             width: 20px;
@@ -257,8 +282,6 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
-        .floating-elements {
             position: absolute;
             top: 0;
             left: 0;
@@ -355,28 +378,28 @@
             <form id="jobForm">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="position"><i class="fas fa-user-tie"></i>Vị trí tuyển dụng</label>
-                        <input type="text" id="position" name="position" class="form-control" placeholder="Nhập vị trí cần tuyển">
+                        <label for="position"><i class="fas fa-user-tie"></i>Vị trí tuyển dụng <span class="required">*</span></label>
+                        <input type="text" id="position" name="position" class="form-control" placeholder="Nhập vị trí cần tuyển" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="title"><i class="fas fa-crown"></i>Chức vụ</label>
-                        <input type="text" id="title" name="title" class="form-control" placeholder="Nhập chức vụ">
+                        <label for="title"><i class="fas fa-crown"></i>Chức vụ <span class="required">*</span></label>
+                        <input type="text" id="title" name="title" class="form-control" placeholder="Nhập chức vụ" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="salary"><i class="fas fa-dollar-sign"></i>Mức lương</label>
-                        <input type="text" id="salary" name="salary" class="form-control" placeholder="VD: 10-15 triệu VND">
+                        <label for="salary"><i class="fas fa-dollar-sign"></i>Mức lương <span class="required">*</span></label>
+                        <input type="text" id="salary" name="salary" class="form-control" placeholder="VD: 10-15 triệu VND" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="company"><i class="fas fa-building"></i>Doanh nghiệp</label>
-                        <input type="text" id="company" name="company" class="form-control" placeholder="Tên doanh nghiệp">
+                        <label for="company"><i class="fas fa-building"></i>Doanh nghiệp <span class="required">*</span></label>
+                        <input type="text" id="company" name="company" class="form-control" placeholder="Tên doanh nghiệp" required>
                     </div>
                     
                     <div class="form-group full-width">
-                        <label for="description"><i class="fas fa-file-alt"></i>Mô tả công việc</label>
-                        <textarea id="description" name="description" class="form-control" placeholder="Mô tả chi tiết về công việc, yêu cầu, trách nhiệm..."></textarea>
+                        <label for="description"><i class="fas fa-file-alt"></i>Mô tả công việc <span class="required">*</span></label>
+                        <textarea id="description" name="description" class="form-control" placeholder="Mô tả chi tiết về công việc, yêu cầu, trách nhiệm..." required></textarea>
                     </div>
                     
                     <div class="form-group full-width">
@@ -390,13 +413,13 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="manager"><i class="fas fa-user-shield"></i>Người phụ trách</label>
-                        <input type="text" id="manager" name="manager" class="form-control" placeholder="Tên người phụ trách">
+                        <label for="manager"><i class="fas fa-user-shield"></i>Người phụ trách <span class="required">*</span></label>
+                        <input type="text" id="manager" name="manager" class="form-control" placeholder="Tên người phụ trách" required>
                     </div>
                     
                     <div class="form-group full-width">
-                        <label for="contactInfo"><i class="fas fa-phone"></i>Thông tin liên hệ</label>
-                        <textarea id="contactInfo" name="contactInfo" class="form-control" placeholder="Số điện thoại, email, thông tin liên hệ khác"></textarea>
+                        <label for="contactInfo"><i class="fas fa-phone"></i>Thông tin liên hệ <span class="required">*</span></label>
+                        <textarea id="contactInfo" name="contactInfo" class="form-control" placeholder="Số điện thoại, email, thông tin liên hệ khác" required></textarea>
                     </div>
                 </div>
                 
@@ -414,13 +437,13 @@
             <form id="recruiterForm">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="recruiterName"><i class="fas fa-user"></i>Người phụ trách</label>
-                        <input type="text" id="recruiterName" name="recruiterName" class="form-control" placeholder="Tên người phụ trách tuyển dụng">
+                        <label for="recruiterName"><i class="fas fa-user"></i>Người phụ trách <span class="required">*</span></label>
+                        <input type="text" id="recruiterName" name="recruiterName" class="form-control" placeholder="Tên người phụ trách tuyển dụng" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="recruiterEmail"><i class="fas fa-envelope"></i>Email</label>
-                        <input type="email" id="recruiterEmail" name="recruiterEmail" class="form-control" placeholder="email@domain.com">
+                        <label for="recruiterEmail"><i class="fas fa-envelope"></i>Email <span class="required">*</span></label>
+                        <input type="email" id="recruiterEmail" name="recruiterEmail" class="form-control" placeholder="email@domain.com" required>
                     </div>
                     
                     <div class="form-group full-width">
@@ -429,8 +452,8 @@
                     </div>
                     
                     <div class="form-group full-width">
-                        <label for="recruiterContact"><i class="fas fa-phone"></i>Thông tin liên hệ</label>
-                        <textarea id="recruiterContact" name="recruiterContact" class="form-control" placeholder="Số điện thoại, Zalo, các thông tin liên hệ khác"></textarea>
+                        <label for="recruiterContact"><i class="fas fa-phone"></i>Thông tin liên hệ <span class="required">*</span></label>
+                        <textarea id="recruiterContact" name="recruiterContact" class="form-control" placeholder="Số điện thoại, Zalo, các thông tin liên hệ khác" required></textarea>
                     </div>
                     
                     <div class="form-group full-width">
@@ -465,6 +488,46 @@
 
     <script>
         const WEBHOOK_URL = 'https://wombat-upright-suitably.ngrok-free.app/webhook-test/a9bca766-d455-4212-906f-96bb0d2da438';
+
+        function validateForm(form) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                const errorDiv = field.parentNode.querySelector('.error-message');
+                
+                if (!field.value.trim()) {
+                    field.classList.add('invalid');
+                    
+                    if (!errorDiv) {
+                        const error = document.createElement('div');
+                        error.className = 'error-message';
+                        error.textContent = 'Trường này không được để trống';
+                        field.parentNode.appendChild(error);
+                    }
+                    errorDiv && (errorDiv.style.display = 'block');
+                    isValid = false;
+                } else {
+                    field.classList.remove('invalid');
+                    if (errorDiv) {
+                        errorDiv.style.display = 'none';
+                    }
+                }
+                
+                // Real-time validation
+                field.addEventListener('input', () => {
+                    if (field.value.trim()) {
+                        field.classList.remove('invalid');
+                        const errorDiv = field.parentNode.querySelector('.error-message');
+                        if (errorDiv) {
+                            errorDiv.style.display = 'none';
+                        }
+                    }
+                });
+            });
+            
+            return isValid;
+        }
 
         function showTab(tabName) {
             // Hide all tab contents
@@ -504,6 +567,12 @@
         // Job Form Submission
         document.getElementById('jobForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // Validate form before submission
+            if (!validateForm(e.target)) {
+                showStatus('jobStatus', 'Vui lòng điền đầy đủ các trường bắt buộc!', false);
+                return;
+            }
             
             const submitBtn = e.target.querySelector('.btn-submit');
             const originalText = submitBtn.innerHTML;
@@ -550,6 +619,12 @@
         // Recruiter Form Submission
         document.getElementById('recruiterForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // Validate form before submission
+            if (!validateForm(e.target)) {
+                showStatus('recruiterStatus', 'Vui lòng điền đầy đủ các trường bắt buộc!', false);
+                return;
+            }
             
             const submitBtn = e.target.querySelector('.btn-submit');
             const originalText = submitBtn.innerHTML;
