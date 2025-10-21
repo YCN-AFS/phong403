@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartMarketer - Tạo nội dung AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0066ff 0%, #ff8c42 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .header-logo {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            animation: fadeInScale 0.8s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .header-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .header-subtitle {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 0.5px;
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            justify-content: center;
+            animation: fadeIn 0.6s ease-out;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 11px 28px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #0066ff;
+            border-color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
+            color: white;
+            padding: 35px 25px;
+            text-align: center;
+            border-bottom: 4px solid #ff8c42;
+        }
+
+        .form-header h2 {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .form-header p {
+            font-size: 14px;
+            opacity: 0.95;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        .inputs-wrapper {
+            padding: 30px 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-required::after {
+            content: "*";
+            color: #ff8c42;
+            margin-left: 4px;
+            font-weight: 700;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+            color: #1a202c;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #0066ff;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #a0aec0;
+        }
+
+        .button-group-label {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chapters-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .tone-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .option-button {
+            padding: 11px 12px;
+            border: 2px solid #e2e8f0;
+            background-color: white;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 44px;
+            font-family: inherit;
+        }
+
+        .option-button:hover {
+            border-color: #0066ff;
+            background-color: rgba(0, 102, 255, 0.05);
+        }
+
+        .option-button:active {
+            transform: scale(0.98);
+        }
+
+        .option-button.active {
+            background: linear-gradient(135deg, #0066ff 0%, #ff8c42 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
+        }
+
+        .error-field {
+            font-size: 12px;
+            color: #ff8c42;
+            margin-top: 6px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .error-show {
+            display: block !important;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #0066ff 0%, #ff8c42 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(0, 102, 255, 0.3);
+            margin-top: 15px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 102, 255, 0.4);
+        }
+
+        .submit-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.8;
+            cursor: not-allowed;
+        }
+
+        .submit-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .submit-btn.loading svg {
+            animation: spin 1.5s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .form-footer {
+            padding: 16px 25px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #f0f1f5 100%);
+            text-align: center;
+            font-size: 12px;
+            color: #718096;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer-brand {
+            color: #0066ff;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+
+            .header-title {
+                font-size: 28px;
+            }
+
+            .header-subtitle {
+                font-size: 14px;
+            }
+
+            .tab-btn {
+                padding: 10px 22px;
+                font-size: 13px;
+            }
+
+            .form-header {
+                padding: 28px 20px;
+            }
+
+            .form-header h2 {
+                font-size: 22px;
+            }
+
+            .inputs-wrapper {
+                padding: 25px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+                padding-top: 15px;
+            }
+
+            .header-title {
+                font-size: 24px;
+            }
+
+            .tab-btn {
+                padding: 10px 20px;
+                font-size: 12px;
+                flex: 1;
+                min-width: 130px;
+            }
+
+            .form-header {
+                padding: 25px 18px;
+            }
+
+            .form-header h2 {
+                font-size: 20px;
+            }
+
+            .inputs-wrapper {
+                padding: 24px 16px;
+            }
+
+            .chapters-container {
+                grid-template-columns: repeat(5, 1fr);
+            }
+
+            .tone-container {
+                grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-logo">
+            <svg class="logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#ff8c42;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <circle cx="50" cy="50" r="45" fill="url(#logoGrad)" opacity="0.2"/>
+                <path d="M50 20 L70 40 L50 50 L30 40 Z" fill="url(#logoGrad)"/>
+                <path d="M50 50 L70 60 L50 80 L30 60 Z" fill="url(#logoGrad)" opacity="0.7"/>
+            </svg>
+            <h1 class="header-title">SMARTMARKETER</h1>
+            <p class="header-subtitle">Giải pháp tự động hóa tiếp thị số</p>
+        </div>
+
+        <div class="tabs-container">
+            <button class="tab-btn active" data-tab="wordpress">
+                📝 WordPress
+            </button>
+            <button class="tab-btn" data-tab="facebook">
+                📱 Facebook
+            </button>
+        </div>
+
+        <div class="card">
+            <div id="wordpress-tab" class="tab-content active">
+                <form id="wordpress-form" novalidate>
+                    <div class="form-header">
+                        <h2>Tạo Bài Viết WordPress</h2>
+                        <p>Tạo bài viết blog chuyên sâu, chi tiết và SEO-friendly với AI</p>
+                    </div>
+                    <div class="inputs-wrapper">
+                        <div class="form-group">
+                            <label class="form-label form-required">Từ khóa</label>
+                            <input class="form-input" type="text" id="wp-field-0" placeholder="vd: SEO, WordPress, Content Marketing">
+                            <p class="error-field error-wp-field-0">Trường này không được để trống</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="button-group-label form-required">Số chương</label>
+                            <div class="chapters-container">
+                                <button type="button" class="option-button" data-field="wp-field-1" data-value="1">1</button>
+                                <button type="button" class="option-button" data-field="wp-field-1" data-value="2">2</button>
+                                <button type="button" class="option-button" data-field="wp-field-1" data-value="3">3</button>
+                                <button type="button" class="option-button" data-field="wp-field-1" data-value="4">4</button>
+                                <button type="button" class="option-button" data-field="wp-field-1" data-value="5">5</button>
+                                <button type="button" class="option-button" data-field="wp-field-1" data-value="6">6</button>
+                                <button type="button" class="option-button" data-field="wp-field-1" data-value="7">7</button>
+                                <button type="button" class="option-button" data-field="wp-field-1" data-value="8">8</button>
+                                <button type="button" class="option-button" data-field="wp-field-1" data-value="9">9</button>
+                                <button type="button" class="option-button" data-field="wp-field-1" data-value="10">10</button>
+                            </div>
+                            <input type="hidden" id="wp-field-1" value="">
+                            <p class="error-field error-wp-field-1">Trường này không được để trống</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label form-required">Số từ tối đa</label>
+                            <input class="form-input" type="number" id="wp-field-2" placeholder="vd: 2000">
+                            <p class="error-field error-wp-field-2">Trường này không được để trống</p>
+                        </div>
+
+                        <button type="submit" class="submit-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 512 512">
+                                <path fill="currentColor" d="M304 48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zm0 416a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM48 304a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm464-48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM142.9 437A48 48 0 1 0 75 369.1 48 48 0 1 0 142.9 437zm0-294.2A48 48 0 1 0 75 75a48 48 0 1 0 67.9 67.9zM369.1 437A48 48 0 1 0 437 369.1 48 48 0 1 0 369.1 437z"></path>
+                            </svg>
+                            Tạo bài viết
+                        </button>
+                    </div>
+                    <div class="form-footer">
+                        <div>Bài viết sẽ được lưu <span class="footer-brand">nháp</span> trên WordPress của bạn</div>
+                    </div>
+                </form>
+            </div>
+
+            <div id="facebook-tab" class="tab-content">
+                <form id="facebook-form" novalidate>
+                    <div class="form-header">
+                        <h2>Tạo Bài Viết Facebook</h2>
+                        <p>Tạo bài viết tương tác, hấp dẫn được tối ưu cho mạng xã hội</p>
+                    </div>
+                    <div class="inputs-wrapper">
+                        <div class="form-group">
+                            <label class="form-label form-required">Chủ đề</label>
+                            <input class="form-input" type="text" id="fb-field-0" placeholder="vd: Marketing tips, Business advice">
+                            <p class="error-field error-fb-field-0">Trường này không được để trống</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="button-group-label form-required">Giọng điệu</label>
+                            <div class="tone-container">
+                                <button type="button" class="option-button" data-field="fb-field-1" data-value="professional">Chuyên nghiệp</button>
+                                <button type="button" class="option-button" data-field="fb-field-1" data-value="friendly">Thân thiện</button>
+                                <button type="button" class="option-button" data-field="fb-field-1" data-value="motivational">Truyền cảm hứng</button>
+                                <button type="button" class="option-button" data-field="fb-field-1" data-value="humorous">Hài hước</button>
+                                <button type="button" class="option-button" data-field="fb-field-1" data-value="educational">Giáo dục</button>
+                            </div>
+                            <input type="hidden" id="fb-field-1" value="">
+                            <p class="error-field error-fb-field-1">Trường này không được để trống</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label form-required">Số từ tối đa</label>
+                            <input class="form-input" type="number" id="fb-field-2" placeholder="vd: 300">
+                            <p class="error-field error-fb-field-2">Trường này không được để trống</p>
+                        </div>
+
+                        <button type="submit" class="submit-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 512 512">
+                                <path fill="currentColor" d="M304 48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zm0 416a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM48 304a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm464-48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM142.9 437A48 48 0 1 0 75 369.1 48 48 0 1 0 142.9 437zm0-294.2A48 48 0 1 0 75 75a48 48 0 1 0 67.9 67.9zM369.1 437A48 48 0 1 0 437 369.1 48 48 0 1 0 369.1 437z"></path>
+                            </svg>
+                            Tạo bài viết
+                        </button>
+                    </div>
+                    <div class="form-footer">
+                        <div>Bài viết sẽ được sao chép vào <span class="footer-brand">clipboard</span> của bạn</div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WEBHOOK_PRIMARY = 'https://n8n-lhu.giize.com/webhook/10a6553c-69fd-4abf-9444-6f0e006e6904';
+        const WEBHOOK_BACKUP = 'https://n8n-lhu.giize.com/webhook-test/10a6553c-69fd-4abf-9444-6f0e006e6904';
+
+        async function sendToWebhook(data) {
+            try {
+                const response = await fetch(WEBHOOK_PRIMARY, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error('Primary webhook failed');
+                return await response.json();
+            } catch (error) {
+                console.log('Primary webhook failed, trying backup...', error);
+                try {
+                    const response = await fetch(WEBHOOK_BACKUP, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (!response.ok) throw new Error('Backup webhook also failed');
+                    return await response.json();
+                } catch (backupError) {
+                    console.error('Both webhooks failed:', backupError);
+                    throw new Error('Không thể kết nối đến server. Vui lòng thử lại sau.');
+                }
+            }
+        }
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const tabName = this.getAttribute('data-tab');
+                
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                const tabContent = document.getElementById(tabName + '-tab');
+                if (tabContent) {
+                    tabContent.classList.add('active');
+                }
+            });
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('option-button')) {
+                e.preventDefault();
+                
+                const fieldId = e.target.getAttribute('data-field');
+                const value = e.target.getAttribute('data-value');
+                const container = e.target.closest('.form-group');
+                
+                if (container) {
+                    container.querySelectorAll('.option-button').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    
+                    const hiddenInput = document.getElementById(fieldId);
+                    if (hiddenInput) {
+                        hiddenInput.value = value;
+                    }
+                    
+                    const errorField = container.querySelector('.error-field');
+                    if (errorField) {
+                        errorField.classList.remove('error-show');
+                    }
+                }
+            }
+        });
+
+        function validateForm(formId) {
+            const fields = formId === 'wordpress-form' 
+                ? ['wp-field-0', 'wp-field-1', 'wp-field-2']
+                : ['fb-field-0', 'fb-field-1', 'fb-field-2'];
+            
+            let isValid = true;
+            fields.forEach((fieldId, index) => {
+                const field = document.getElementById(fieldId);
+                const prefix = formId === 'wordpress-form' ? 'wp' : 'fb';
+                const errorEl = document.querySelector(`.error-${prefix}-field-${index}`);
+                
+                if (!field || !field.value || field.value.trim() === '') {
+                    if (errorEl) errorEl.classList.add('error-show');
+                    isValid = false;
+                } else {
+                    if (errorEl) errorEl.classList.remove('error-show');
+                }
+            });
+            return isValid;
+        }
+
+        const wpForm = document.getElementById('wordpress-form');
+        if (wpForm) {
+            wpForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (validateForm('wordpress-form')) {
+                    const btn = wpForm.querySelector('.submit-btn');
+                    const originalText = btn.innerHTML;
+                    btn.classList.add('loading');
+                    btn.disabled = true;
+                    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 512 512"><path fill="currentColor" d="M304 48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zm0 416a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM48 304a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm464-48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM142.9 437A48 48 0 1 0 75 369.1 48 48 0 1 0 142.9 437zm0-294.2A48 48 0 1 0 75 75a48 48 0 1 0 67.9 67.9zM369.1 437A48 48 0 1 0 437 369.1 48 48 0 1 0 369.1 437z"></path></svg> Đang gửi...';
+                    
+                    const data = {
+                        type: 'wordpress',
+                        keywords: document.getElementById('wp-field-0').value,
+                        chapters: document.getElementById('wp-field-1').value,
+                        maxWords: document.getElementById('wp-field-2').value,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    try {
+                        const result = await sendToWebhook(data);
+                        console.log('WordPress webhook response:', result);
+                        alert('✅ Bài viết WordPress đang được tạo! Vui lòng kiểm tra WordPress của bạn.');
+                        wpForm.reset();
+                        wpForm.querySelectorAll('.option-button').forEach(btn => btn.classList.remove('active'));
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('❌ ' + error.message);
+                    } finally {
+                        btn.classList.remove('loading');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    }
+                }
+            });
+        }
+
+        const fbForm = document.getElementById('facebook-form');
+        if (fbForm) {
+            fbForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (validateForm('facebook-form')) {
+                    const btn = fbForm.querySelector('.submit-btn');
+                    const originalText = btn.innerHTML;
+                    btn.classList.add('loading');
+                    btn.disabled = true;
+                    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 512 512"><path fill="currentColor" d="M304 48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zm0 416a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM48 304a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm464-48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM142.9 437A48 48 0 1 0 75 369.1 48 48 0 1 0 142.9 437zm0-294.2A48 48 0 1 0 75 75a48 48 0 1 0 67.9 67.9zM369.1 437A48 48 0 1 0 437 369.1 48 48 0 1 0 369.1 437z"></path></svg> Đang gửi...';
+                    
+                    const data = {
+                        type: 'facebook',
+                        topic: document.getElementById('fb-field-0').value,
+                        tone: document.getElementById('fb-field-1').value,
+                        maxWords: document.getElementById('fb-field-2').value,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    try {
+                        const result = await sendToWebhook(data);
+                        console.log('Facebook webhook response:', result);
+                        alert('✅ Bài viết Facebook đã được tạo và sao chép vào clipboard!');
+                        fbForm.reset();
+                        fbForm.querySelectorAll('.option-button').forEach(btn => btn.classList.remove('active'));
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('❌ ' + error.message);
+                    } finally {
+                        btn.classList.remove('loading');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    }
+                }
+            });
+        }
+
+        document.querySelectorAll('.form-input').forEach(field => {
+            field.addEventListener('input', function() {
+                const errorEl = this.closest('.form-group')?.querySelector('.error-field');
+                if (errorEl) {
+                    errorEl.classList.remove('error-show');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+                    
