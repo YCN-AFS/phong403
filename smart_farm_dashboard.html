@@ -272,7 +272,8 @@
 
     <script>
         let chartInstance = null;
-        const API_URL = 'http://103.218.122.188:8502/stats';
+        const API_URL = 'https://api-lua.s4h.edu.vn/stats';
+        const API_SUMMARY_URL = 'https://api-lua.s4h.edu.vn/summary';
         
         // Danh sách các CORS proxy để thử
         const PROXIES = [
@@ -310,34 +311,37 @@
             return { class: 'critical', text: 'Nguy hiểm' };
         }
 
-        function renderStats(data) {
+        function renderStats(data, summary) {
             const cameras = Object.entries(data);
-            const totalCameras = cameras.length;
-            const totalAttempts = cameras.reduce((sum, [_, stats]) => sum + stats.total_attempts, 0);
-            const totalFailed = cameras.reduce((sum, [_, stats]) => sum + stats.failed_attempts, 0);
-            const healthyCameras = cameras.filter(([_, stats]) => {
+            const totalCameras = summary ? summary.total_cameras : cameras.length;
+            const onlineCameras = summary ? summary.online_cameras : cameras.filter(([_, stats]) => {
                 const rate = calculateSuccessRate(stats.total_attempts, stats.failed_attempts);
                 return rate >= 95;
             }).length;
-
-            const overallSuccessRate = calculateSuccessRate(totalAttempts, totalFailed);
+            const offlineCameras = summary ? summary.offline_cameras : totalCameras - onlineCameras;
+            const totalFailed = summary ? summary.total_system_failures : cameras.reduce((sum, [_, stats]) => sum + stats.failed_attempts, 0);
+            const systemStatus = summary ? summary.status : (onlineCameras === totalCameras ? 'Healthy' : 'Warning');
 
             const statsHTML = `
+                <div class="stat-card ${systemStatus === 'Healthy' ? 'success' : 'warning'}">
+                    <h3>🏥 Trạng thái hệ thống</h3>
+                    <div class="stat-value" style="font-size: 24px;">${systemStatus === 'Healthy' ? '✅ Khỏe mạnh' : '⚠️ Cảnh báo'}</div>
+                </div>
                 <div class="stat-card success">
                     <h3>📹 Tổng số Camera</h3>
                     <div class="stat-value">${totalCameras}</div>
                 </div>
                 <div class="stat-card success">
-                    <h3>✅ Camera hoạt động tốt</h3>
-                    <div class="stat-value">${healthyCameras}</div>
+                    <h3>✅ Camera Online</h3>
+                    <div class="stat-value">${onlineCameras}</div>
+                </div>
+                <div class="stat-card ${offlineCameras > 0 ? 'danger' : 'success'}">
+                    <h3>❌ Camera Offline</h3>
+                    <div class="stat-value">${offlineCameras}</div>
                 </div>
                 <div class="stat-card ${totalFailed > 10 ? 'warning' : 'success'}">
-                    <h3>❌ Tổng lỗi kết nối</h3>
+                    <h3>⚠️ Tổng lỗi hệ thống</h3>
                     <div class="stat-value">${totalFailed}</div>
-                </div>
-                <div class="stat-card ${overallSuccessRate >= 95 ? 'success' : overallSuccessRate >= 85 ? 'warning' : 'danger'}">
-                    <h3>📈 Tỷ lệ thành công</h3>
-                    <div class="stat-value">${overallSuccessRate}%</div>
                 </div>
             `;
 
@@ -471,31 +475,39 @@
             for (let i = currentProxyIndex; i < PROXIES.length; i++) {
                 try {
                     const proxy = PROXIES[i];
-                    const url = proxy ? proxy + encodeURIComponent(API_URL) : API_URL;
+                    const statsUrl = proxy ? proxy + encodeURIComponent(API_URL) : API_URL;
+                    const summaryUrl = proxy ? proxy + encodeURIComponent(API_SUMMARY_URL) : API_SUMMARY_URL;
                     
-                    console.log(`Đang thử ${proxy ? 'proxy ' + (i+1) : 'kết nối trực tiếp'}: ${url}`);
+                    console.log(`Đang thử ${proxy ? 'proxy ' + (i+1) : 'kết nối trực tiếp'}`);
                     
-                    const response = await fetch(url, {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/json',
-                        },
-                        mode: proxy ? 'cors' : 'cors', // Thử cors mode
-                    });
+                    // Gọi cả 2 API đồng thời
+                    const [statsResponse, summaryResponse] = await Promise.all([
+                        fetch(statsUrl, {
+                            method: 'GET',
+                            headers: { 'Accept': 'application/json' },
+                            mode: 'cors',
+                        }),
+                        fetch(summaryUrl, {
+                            method: 'GET',
+                            headers: { 'Accept': 'application/json' },
+                            mode: 'cors',
+                        })
+                    ]);
                     
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
+                    if (!statsResponse.ok || !summaryResponse.ok) {
+                        throw new Error(`HTTP ${statsResponse.status} / ${summaryResponse.status}`);
                     }
                     
-                    const data = await response.json();
+                    const statsData = await statsResponse.json();
+                    const summaryData = await summaryResponse.json();
 
                     // Thành công - lưu proxy hoạt động
                     currentProxyIndex = i;
                     console.log(`✅ Thành công với ${proxy ? 'proxy ' + (i+1) : 'kết nối trực tiếp'}`);
 
-                    renderStats(data);
-                    renderCameras(data);
-                    renderChart(data);
+                    renderStats(statsData, summaryData);
+                    renderCameras(statsData);
+                    renderChart(statsData);
 
                     document.getElementById('loading').style.display = 'none';
                     return; // Thành công, thoát hàm
@@ -536,7 +548,9 @@ python -m http.server 8000
                                     Trình duyệt chặn CORS từ file:// protocol. Phải chạy qua HTTP server hoặc thêm CORS vào API.
                                 </div>
                                 <div style="margin-top: 15px; padding: 12px; background: #e0f2fe; color: #075985; border-radius: 6px;">
-                                    <strong>💡 Tip:</strong> API đang chạy tốt tại <a href="${API_URL}" target="_blank" style="color: #0369a1; font-weight: bold;">${API_URL}</a>
+                                    <strong>💡 Tip:</strong> API đang chạy tốt tại:
+                                    <br>• <a href="${API_URL}" target="_blank" style="color: #0369a1; font-weight: bold;">${API_URL}</a>
+                                    <br>• <a href="${API_SUMMARY_URL}" target="_blank" style="color: #0369a1; font-weight: bold;">${API_SUMMARY_URL}</a>
                                     <br>Vấn đề chỉ là CORS từ trình duyệt!
                                 </div>
                             </div>
