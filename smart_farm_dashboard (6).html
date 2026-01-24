@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Farm Camera Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .stat-card.success .stat-value {
+            color: #10b981;
+        }
+
+        .stat-card.warning .stat-value {
+            color: #f59e0b;
+        }
+
+        .stat-card.danger .stat-value {
+            color: #ef4444;
+        }
+
+        .cameras-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .camera-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .camera-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .camera-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .health-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .health-badge.healthy {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .health-badge.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .health-badge.critical {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .camera-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .camera-stat {
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .camera-stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .camera-stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .timestamp {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 5px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 25px;
+        }
+
+        .chart-container h2 {
+            color: #1f2937;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .success-rate-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .success-rate-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <div class="status-indicator"></div>
+                Smart Farm Camera Dashboard
+            </h1>
+            <button class="refresh-btn" onclick="loadData()">🔄 Làm mới dữ liệu</button>
+        </div>
+
+        <div id="loading" class="loading">Đang tải dữ liệu...</div>
+        <div id="error" style="display: none;"></div>
+
+        <div id="statsGrid" class="stats-grid" style="display: none;"></div>
+        <div id="camerasGrid" class="cameras-grid" style="display: none;"></div>
+        
+        <div id="chartContainer" class="chart-container" style="display: none;">
+            <h2>📊 Biểu đồ tổng quan Camera</h2>
+            <canvas id="cameraChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let chartInstance = null;
+        const API_URL = 'http://103.218.122.188:8502/stats';
+        
+        // Danh sách các CORS proxy để thử
+        const PROXIES = [
+            '', // Thử trực tiếp trước
+            'https://api.allorigins.win/raw?url=',
+            'https://api.codetabs.com/v1/proxy?quest=',
+            'https://corsproxy.io/?'
+        ];
+        
+        let currentProxyIndex = 0;
+
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'Chưa có dữ liệu';
+            // API trả về định dạng: "2026-01-23 22:22:40"
+            const dateStr = timestamp.replace(' ', 'T');
+            const date = new Date(dateStr);
+            return date.toLocaleString('vi-VN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function calculateSuccessRate(total, failed) {
+            if (total === 0) return 0;
+            return ((total - failed) / total * 100).toFixed(1);
+        }
+
+        function getHealthStatus(successRate) {
+            if (successRate >= 95) return { class: 'healthy', text: 'Tốt' };
+            if (successRate >= 85) return { class: 'warning', text: 'Cảnh báo' };
+            return { class: 'critical', text: 'Nguy hiểm' };
+        }
+
+        function renderStats(data) {
+            const cameras = Object.entries(data);
+            const totalCameras = cameras.length;
+            const totalAttempts = cameras.reduce((sum, [_, stats]) => sum + stats.total_attempts, 0);
+            const totalFailed = cameras.reduce((sum, [_, stats]) => sum + stats.failed_attempts, 0);
+            const healthyCameras = cameras.filter(([_, stats]) => {
+                const rate = calculateSuccessRate(stats.total_attempts, stats.failed_attempts);
+                return rate >= 95;
+            }).length;
+
+            const overallSuccessRate = calculateSuccessRate(totalAttempts, totalFailed);
+
+            const statsHTML = `
+                <div class="stat-card success">
+                    <h3>📹 Tổng số Camera</h3>
+                    <div class="stat-value">${totalCameras}</div>
+                </div>
+                <div class="stat-card success">
+                    <h3>✅ Camera hoạt động tốt</h3>
+                    <div class="stat-value">${healthyCameras}</div>
+                </div>
+                <div class="stat-card ${totalFailed > 10 ? 'warning' : 'success'}">
+                    <h3>❌ Tổng lỗi kết nối</h3>
+                    <div class="stat-value">${totalFailed}</div>
+                </div>
+                <div class="stat-card ${overallSuccessRate >= 95 ? 'success' : overallSuccessRate >= 85 ? 'warning' : 'danger'}">
+                    <h3>📈 Tỷ lệ thành công</h3>
+                    <div class="stat-value">${overallSuccessRate}%</div>
+                </div>
+            `;
+
+            document.getElementById('statsGrid').innerHTML = statsHTML;
+            document.getElementById('statsGrid').style.display = 'grid';
+        }
+
+        function renderCameras(data) {
+            const camerasHTML = Object.entries(data).map(([cameraId, stats]) => {
+                const successRate = calculateSuccessRate(stats.total_attempts, stats.failed_attempts);
+                const health = getHealthStatus(successRate);
+
+                return `
+                    <div class="camera-card">
+                        <div class="camera-header">
+                            <div class="camera-name">📷 ${cameraId}</div>
+                            <div class="health-badge ${health.class}">${health.text}</div>
+                        </div>
+                        <div class="camera-stats">
+                            <div class="camera-stat">
+                                <div class="camera-stat-label">Tổng kết nối</div>
+                                <div class="camera-stat-value">${stats.total_attempts}</div>
+                            </div>
+                            <div class="camera-stat">
+                                <div class="camera-stat-label">Thất bại</div>
+                                <div class="camera-stat-value" style="color: #ef4444;">${stats.failed_attempts}</div>
+                            </div>
+                            <div class="camera-stat">
+                                <div class="camera-stat-label">Thành công gần nhất</div>
+                                <div class="timestamp">${formatTimestamp(stats.last_success)}</div>
+                            </div>
+                            <div class="camera-stat">
+                                <div class="camera-stat-label">Thất bại gần nhất</div>
+                                <div class="timestamp">${formatTimestamp(stats.last_failure)}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="camera-stat-label">Tỷ lệ thành công: ${successRate}%</div>
+                            <div class="success-rate-bar">
+                                <div class="success-rate-fill" style="width: ${successRate}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('camerasGrid').innerHTML = camerasHTML;
+            document.getElementById('camerasGrid').style.display = 'grid';
+        }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('cameraChart').getContext('2d');
+            
+            const labels = Object.keys(data);
+            const successData = Object.values(data).map(stats => stats.total_attempts - stats.failed_attempts);
+            const failureData = Object.values(data).map(stats => stats.failed_attempts);
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Kết nối thành công',
+                            data: successData,
+                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Kết nối thất bại',
+                            data: failureData,
+                            backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                            borderColor: 'rgba(239, 68, 68, 1)',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 14 },
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('chartContainer').style.display = 'block';
+        }
+
+        async function loadData() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+
+            // Thử từng proxy cho đến khi thành công
+            for (let i = currentProxyIndex; i < PROXIES.length; i++) {
+                try {
+                    const proxy = PROXIES[i];
+                    const url = proxy ? proxy + encodeURIComponent(API_URL) : API_URL;
+                    
+                    console.log(`Đang thử ${proxy ? 'proxy ' + (i+1) : 'kết nối trực tiếp'}: ${url}`);
+                    
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                        },
+                        mode: proxy ? 'cors' : 'cors', // Thử cors mode
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+
+                    // Thành công - lưu proxy hoạt động
+                    currentProxyIndex = i;
+                    console.log(`✅ Thành công với ${proxy ? 'proxy ' + (i+1) : 'kết nối trực tiếp'}`);
+
+                    renderStats(data);
+                    renderCameras(data);
+                    renderChart(data);
+
+                    document.getElementById('loading').style.display = 'none';
+                    return; // Thành công, thoát hàm
+                    
+                } catch (error) {
+                    console.log(`❌ Thất bại với ${PROXIES[i] ? 'proxy ' + (i+1) : 'kết nối trực tiếp'}: ${error.message}`);
+                    
+                    // Nếu là proxy cuối cùng, hiển thị lỗi
+                    if (i === PROXIES.length - 1) {
+                        document.getElementById('loading').style.display = 'none';
+                        document.getElementById('error').innerHTML = `
+                            <div class="error">
+                                <strong>❌ Lỗi CORS:</strong> Không thể kết nối với API sau khi thử ${PROXIES.length} phương thức.
+                                <br><br>
+                                <strong>🔧 GIẢI PHÁP DUY NHẤT:</strong>
+                                <ol style="margin: 15px 0 15px 25px; text-align: left;">
+                                    <li style="margin-bottom: 10px;">
+                                        <strong>Thêm CORS vào API server</strong> (Cách tốt nhất):
+                                        <pre style="background: #2d3748; color: #e2e8f0; padding: 12px; border-radius: 6px; margin-top: 8px; overflow-x: auto; font-size: 13px;">pip install flask-cors
+
+# Trong file API server
+from flask_cors import CORS
+CORS(app)</pre>
+                                    </li>
+                                    <li style="margin-bottom: 10px;">
+                                        <strong>Lưu file HTML và chạy qua HTTP server:</strong>
+                                        <pre style="background: #2d3748; color: #e2e8f0; padding: 12px; border-radius: 6px; margin-top: 8px; font-size: 13px;"># Mở terminal tại thư mục chứa file
+python -m http.server 8000
+
+# Truy cập: http://localhost:8000/smart_farm_dashboard.html</pre>
+                                    </li>
+                                    <li style="margin-bottom: 10px;">
+                                        <strong>Hoặc dùng extension Live Server trong VS Code</strong>
+                                    </li>
+                                </ol>
+                                <div style="background: #fef3c7; color: #92400e; padding: 12px; border-radius: 6px; margin-top: 15px;">
+                                    <strong>⚠️ Lưu ý:</strong> Bạn đang mở file HTML trực tiếp (origin = null). 
+                                    Trình duyệt chặn CORS từ file:// protocol. Phải chạy qua HTTP server hoặc thêm CORS vào API.
+                                </div>
+                                <div style="margin-top: 15px; padding: 12px; background: #e0f2fe; color: #075985; border-radius: 6px;">
+                                    <strong>💡 Tip:</strong> API đang chạy tốt tại <a href="${API_URL}" target="_blank" style="color: #0369a1; font-weight: bold;">${API_URL}</a>
+                                    <br>Vấn đề chỉ là CORS từ trình duyệt!
+                                </div>
+                            </div>
+                        `;
+                        document.getElementById('error').style.display = 'block';
+                    }
+                    // Tiếp tục thử proxy tiếp theo
+                    continue;
+                }
+            }
+        }
+
+        // Tải dữ liệu khi trang được load
+        loadData();
+
+        // Tự động làm mới mỗi 30 giây
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html>
