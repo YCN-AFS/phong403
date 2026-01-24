@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Farm Camera Dashboard</title>
+    <title>Lúa Farm Camera Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
@@ -216,6 +216,19 @@
             font-size: 20px;
         }
 
+        .charts-wrapper {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .loading {
             text-align: center;
             padding: 50px;
@@ -264,24 +277,42 @@
         <div id="statsGrid" class="stats-grid" style="display: none;"></div>
         <div id="camerasGrid" class="cameras-grid" style="display: none;"></div>
         
-        <div id="chartContainer" class="chart-container" style="display: none;">
-            <h2>📊 Biểu đồ tổng quan Camera</h2>
-            <canvas id="cameraChart"></canvas>
+        <div class="charts-wrapper" id="chartsWrapper" style="display: none;">
+            <div class="chart-container">
+                <h2>📊 Biểu đồ cột - Kết nối Camera</h2>
+                <canvas id="cameraChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h2>🥧 Biểu đồ tròn - Phân bố lỗi</h2>
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+
+        <div class="charts-wrapper" id="chartsWrapper2" style="display: none;">
+            <div class="chart-container">
+                <h2>📈 Biểu đồ đường - Tỷ lệ thành công</h2>
+                <canvas id="lineChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h2>📊 Biểu đồ ngang - So sánh Camera</h2>
+                <canvas id="horizontalChart"></canvas>
+            </div>
         </div>
     </div>
 
     <script>
-        let chartInstance = null;
+        let chartInstances = {
+            bar: null,
+            pie: null,
+            line: null,
+            horizontal: null
+        };
         const API_URL = 'https://api-lua.s4h.edu.vn/stats';
         const API_SUMMARY_URL = 'https://api-lua.s4h.edu.vn/summary';
         
-        // Danh sách các CORS proxy để thử
-        const PROXIES = [
-            '', // Thử trực tiếp trước
-            'https://api.allorigins.win/raw?url=',
-            'https://api.codetabs.com/v1/proxy?quest=',
-            'https://corsproxy.io/?'
-        ];
+        // Sử dụng proxy ổn định nhất
+        const USE_PROXY = true;
+        const BEST_PROXY = 'https://api.codetabs.com/v1/proxy?quest='; // Proxy hoạt động tốt nhất
         
         let currentProxyIndex = 0;
 
@@ -393,173 +424,370 @@
         }
 
         function renderChart(data) {
-            const ctx = document.getElementById('cameraChart').getContext('2d');
-            
             const labels = Object.keys(data);
             const successData = Object.values(data).map(stats => stats.total_attempts - stats.failed_attempts);
             const failureData = Object.values(data).map(stats => stats.failed_attempts);
+            const totalAttempts = Object.values(data).map(stats => stats.total_attempts);
+            const successRates = Object.values(data).map(stats => 
+                calculateSuccessRate(stats.total_attempts, stats.failed_attempts)
+            );
 
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
+            // Gradient colors
+            const successGradient = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0'];
+            const failureGradient = ['#ef4444', '#f87171', '#fca5a5', '#fecaca'];
 
-            chartInstance = new Chart(ctx, {
+            // 1. Biểu đồ cột (Bar Chart)
+            const ctxBar = document.getElementById('cameraChart').getContext('2d');
+            if (chartInstances.bar) chartInstances.bar.destroy();
+            
+            chartInstances.bar = new Chart(ctxBar, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Kết nối thành công',
+                            label: '✅ Kết nối thành công',
                             data: successData,
-                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.85)',
                             borderColor: 'rgba(16, 185, 129, 1)',
-                            borderWidth: 2
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            borderSkipped: false,
                         },
                         {
-                            label: 'Kết nối thất bại',
+                            label: '❌ Kết nối thất bại',
                             data: failureData,
-                            backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.85)',
                             borderColor: 'rgba(239, 68, 68, 1)',
-                            borderWidth: 2
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            borderSkipped: false,
                         }
                     ]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
                     plugins: {
                         legend: {
                             position: 'top',
                             labels: {
-                                font: { size: 14 },
-                                padding: 20
+                                font: { size: 13, weight: 'bold' },
+                                padding: 15,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
                             }
                         },
                         tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            backgroundColor: 'rgba(0, 0, 0, 0.85)',
                             padding: 12,
-                            titleFont: { size: 14 },
-                            bodyFont: { size: 13 }
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1,
+                            displayColors: true,
+                            callbacks: {
+                                footer: (items) => {
+                                    const index = items[0].dataIndex;
+                                    const total = totalAttempts[index];
+                                    return `Tổng: ${total} lần kết nối`;
+                                }
+                            }
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
                             grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
                             },
                             ticks: {
-                                stepSize: 1
+                                stepSize: 1,
+                                font: { size: 11 }
                             }
                         },
                         x: {
-                            grid: {
-                                display: false
-                            },
+                            grid: { display: false },
                             ticks: {
                                 maxRotation: 45,
-                                minRotation: 45
+                                minRotation: 45,
+                                font: { size: 10 }
                             }
                         }
                     }
                 }
             });
 
-            document.getElementById('chartContainer').style.display = 'block';
+            // 2. Biểu đồ tròn (Pie Chart) - Phân bố lỗi
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            if (chartInstances.pie) chartInstances.pie.destroy();
+
+            const totalSuccess = successData.reduce((a, b) => a + b, 0);
+            const totalFailure = failureData.reduce((a, b) => a + b, 0);
+            
+            chartInstances.pie = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['✅ Thành công', '❌ Thất bại'],
+                    datasets: [{
+                        data: [totalSuccess, totalFailure],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.85)',
+                            'rgba(239, 68, 68, 0.85)',
+                        ],
+                        borderColor: ['#10b981', '#ef4444'],
+                        borderWidth: 3,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 13, weight: 'bold' },
+                                padding: 20,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                            padding: 12,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                label: (context) => {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = totalSuccess + totalFailure;
+                                    const percent = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percent}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 3. Biểu đồ đường (Line Chart) - Tỷ lệ thành công
+            const ctxLine = document.getElementById('lineChart').getContext('2d');
+            if (chartInstances.line) chartInstances.line.destroy();
+            
+            chartInstances.line = new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '📈 Tỷ lệ thành công (%)',
+                        data: successRates,
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        pointBackgroundColor: 'rgba(99, 102, 241, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(99, 102, 241, 1)',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 13, weight: 'bold' },
+                                padding: 15,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                            padding: 12,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                label: (context) => {
+                                    return `Tỷ lệ: ${context.parsed.y}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                callback: (value) => value + '%',
+                                font: { size: 11 }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                font: { size: 10 }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 4. Biểu đồ ngang (Horizontal Bar) - So sánh
+            const ctxHorizontal = document.getElementById('horizontalChart').getContext('2d');
+            if (chartInstances.horizontal) chartInstances.horizontal.destroy();
+            
+            chartInstances.horizontal = new Chart(ctxHorizontal, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '📊 Tổng kết nối',
+                        data: totalAttempts,
+                        backgroundColor: labels.map((_, i) => {
+                            const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#a855f7', '#14b8a6'];
+                            return colors[i % colors.length];
+                        }),
+                        borderColor: labels.map((_, i) => {
+                            const colors = ['#4f46e5', '#7c3aed', '#db2777', '#e11d48', '#d97706', '#059669', '#0891b2', '#2563eb', '#9333ea', '#0d9488'];
+                            return colors[i % colors.length];
+                        }),
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                            padding: 12,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                font: { size: 11 }
+                            }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { size: 10 }
+                            }
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('chartsWrapper').style.display = 'grid';
+            document.getElementById('chartsWrapper2').style.display = 'grid';
         }
 
         async function loadData() {
             document.getElementById('loading').style.display = 'block';
             document.getElementById('error').style.display = 'none';
 
-            // Thử từng proxy cho đến khi thành công
-            for (let i = currentProxyIndex; i < PROXIES.length; i++) {
-                try {
-                    const proxy = PROXIES[i];
-                    const statsUrl = proxy ? proxy + encodeURIComponent(API_URL) : API_URL;
-                    const summaryUrl = proxy ? proxy + encodeURIComponent(API_SUMMARY_URL) : API_SUMMARY_URL;
-                    
-                    console.log(`Đang thử ${proxy ? 'proxy ' + (i+1) : 'kết nối trực tiếp'}`);
-                    
-                    // Gọi cả 2 API đồng thời
-                    const [statsResponse, summaryResponse] = await Promise.all([
-                        fetch(statsUrl, {
-                            method: 'GET',
-                            headers: { 'Accept': 'application/json' },
-                            mode: 'cors',
-                        }),
-                        fetch(summaryUrl, {
-                            method: 'GET',
-                            headers: { 'Accept': 'application/json' },
-                            mode: 'cors',
-                        })
-                    ]);
-                    
-                    if (!statsResponse.ok || !summaryResponse.ok) {
-                        throw new Error(`HTTP ${statsResponse.status} / ${summaryResponse.status}`);
-                    }
-                    
-                    const statsData = await statsResponse.json();
-                    const summaryData = await summaryResponse.json();
-
-                    // Thành công - lưu proxy hoạt động
-                    currentProxyIndex = i;
-                    console.log(`✅ Thành công với ${proxy ? 'proxy ' + (i+1) : 'kết nối trực tiếp'}`);
-
-                    renderStats(statsData, summaryData);
-                    renderCameras(statsData);
-                    renderChart(statsData);
-
-                    document.getElementById('loading').style.display = 'none';
-                    return; // Thành công, thoát hàm
-                    
-                } catch (error) {
-                    console.log(`❌ Thất bại với ${PROXIES[i] ? 'proxy ' + (i+1) : 'kết nối trực tiếp'}: ${error.message}`);
-                    
-                    // Nếu là proxy cuối cùng, hiển thị lỗi
-                    if (i === PROXIES.length - 1) {
-                        document.getElementById('loading').style.display = 'none';
-                        document.getElementById('error').innerHTML = `
-                            <div class="error">
-                                <strong>❌ Lỗi CORS:</strong> Không thể kết nối với API sau khi thử ${PROXIES.length} phương thức.
-                                <br><br>
-                                <strong>🔧 GIẢI PHÁP DUY NHẤT:</strong>
-                                <ol style="margin: 15px 0 15px 25px; text-align: left;">
-                                    <li style="margin-bottom: 10px;">
-                                        <strong>Thêm CORS vào API server</strong> (Cách tốt nhất):
-                                        <pre style="background: #2d3748; color: #e2e8f0; padding: 12px; border-radius: 6px; margin-top: 8px; overflow-x: auto; font-size: 13px;">pip install flask-cors
-
-# Trong file API server
-from flask_cors import CORS
-CORS(app)</pre>
-                                    </li>
-                                    <li style="margin-bottom: 10px;">
-                                        <strong>Lưu file HTML và chạy qua HTTP server:</strong>
-                                        <pre style="background: #2d3748; color: #e2e8f0; padding: 12px; border-radius: 6px; margin-top: 8px; font-size: 13px;"># Mở terminal tại thư mục chứa file
-python -m http.server 8000
-
-# Truy cập: http://localhost:8000/smart_farm_dashboard.html</pre>
-                                    </li>
-                                    <li style="margin-bottom: 10px;">
-                                        <strong>Hoặc dùng extension Live Server trong VS Code</strong>
-                                    </li>
-                                </ol>
-                                <div style="background: #fef3c7; color: #92400e; padding: 12px; border-radius: 6px; margin-top: 15px;">
-                                    <strong>⚠️ Lưu ý:</strong> Bạn đang mở file HTML trực tiếp (origin = null). 
-                                    Trình duyệt chặn CORS từ file:// protocol. Phải chạy qua HTTP server hoặc thêm CORS vào API.
-                                </div>
-                                <div style="margin-top: 15px; padding: 12px; background: #e0f2fe; color: #075985; border-radius: 6px;">
-                                    <strong>💡 Tip:</strong> API đang chạy tốt tại:
-                                    <br>• <a href="${API_URL}" target="_blank" style="color: #0369a1; font-weight: bold;">${API_URL}</a>
-                                    <br>• <a href="${API_SUMMARY_URL}" target="_blank" style="color: #0369a1; font-weight: bold;">${API_SUMMARY_URL}</a>
-                                    <br>Vấn đề chỉ là CORS từ trình duyệt!
-                                </div>
-                            </div>
-                        `;
-                        document.getElementById('error').style.display = 'block';
-                    }
-                    // Tiếp tục thử proxy tiếp theo
-                    continue;
+            try {
+                // Sử dụng proxy ổn định
+                const statsUrl = USE_PROXY ? BEST_PROXY + encodeURIComponent(API_URL) : API_URL;
+                const summaryUrl = USE_PROXY ? BEST_PROXY + encodeURIComponent(API_SUMMARY_URL) : API_SUMMARY_URL;
+                
+                console.log(`📡 Đang tải dữ liệu từ API...`);
+                
+                // Gọi cả 2 API đồng thời
+                const [statsResponse, summaryResponse] = await Promise.all([
+                    fetch(statsUrl, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' },
+                        mode: 'cors',
+                    }),
+                    fetch(summaryUrl, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' },
+                        mode: 'cors',
+                    })
+                ]);
+                
+                if (!statsResponse.ok || !summaryResponse.ok) {
+                    throw new Error(`API Error: ${statsResponse.status} / ${summaryResponse.status}`);
                 }
+                
+                const statsData = await statsResponse.json();
+                const summaryData = await summaryResponse.json();
+
+                console.log(`✅ Tải dữ liệu thành công!`);
+
+                renderStats(statsData, summaryData);
+                renderCameras(statsData);
+                renderChart(statsData);
+
+                document.getElementById('loading').style.display = 'none';
+                
+            } catch (error) {
+                console.error(`❌ Lỗi:`, error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').innerHTML = `
+                    <div class="error">
+                        <strong>❌ Không thể kết nối API</strong>
+                        <br><br>
+                        <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                            <strong>⚠️ Nguyên nhân:</strong> ${error.message}
+                            <br><br>
+                            <strong>💡 Đang sử dụng CORS Proxy để bypass lỗi.</strong>
+                            <br>Nếu vẫn lỗi, vui lòng:
+                            <ul style="margin: 10px 0 0 20px;">
+                                <li>Kiểm tra kết nối internet</li>
+                                <li>Thử refresh lại trang (F5)</li>
+                                <li>Kiểm tra API server có đang chạy không</li>
+                            </ul>
+                        </div>
+                        <div style="margin-top: 15px; padding: 12px; background: #d1ecf1; color: #0c5460; border-radius: 6px; border-left: 4px solid #17a2b8;">
+                            <strong>🔗 API Endpoints:</strong>
+                            <br>• Stats: <a href="${API_URL}" target="_blank" style="color: #0c5460; font-weight: bold;">${API_URL}</a>
+                            <br>• Summary: <a href="${API_SUMMARY_URL}" target="_blank" style="color: #0c5460; font-weight: bold;">${API_SUMMARY_URL}</a>
+                        </div>
+                        <div style="margin-top: 15px; padding: 12px; background: #f8d7da; color: #721c24; border-radius: 6px; border-left: 4px solid #dc3545;">
+                            <strong>🛠️ Giải pháp vĩnh viễn:</strong>
+                            <br>Thêm CORS vào API server để không cần dùng proxy:
+                            <pre style="background: #2d3748; color: #e2e8f0; padding: 10px; border-radius: 5px; margin-top: 8px; font-size: 12px; overflow-x: auto;">from flask_cors import CORS
+CORS(app)</pre>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('error').style.display = 'block';
             }
         }
 
