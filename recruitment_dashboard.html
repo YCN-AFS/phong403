@@ -216,6 +216,19 @@
             font-size: 20px;
         }
 
+        .charts-wrapper {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .loading {
             text-align: center;
             padding: 50px;
@@ -264,14 +277,36 @@
         <div id="statsGrid" class="stats-grid" style="display: none;"></div>
         <div id="camerasGrid" class="cameras-grid" style="display: none;"></div>
         
-        <div id="chartContainer" class="chart-container" style="display: none;">
-            <h2>📊 Biểu đồ tổng quan Camera</h2>
-            <canvas id="cameraChart"></canvas>
+        <div class="charts-wrapper" id="chartsWrapper" style="display: none;">
+            <div class="chart-container">
+                <h2>📊 Biểu đồ cột - Kết nối Camera</h2>
+                <canvas id="cameraChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h2>🥧 Biểu đồ tròn - Phân bố lỗi</h2>
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+
+        <div class="charts-wrapper" id="chartsWrapper2" style="display: none;">
+            <div class="chart-container">
+                <h2>📈 Biểu đồ đường - Tỷ lệ thành công</h2>
+                <canvas id="lineChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h2>📊 Biểu đồ ngang - So sánh Camera</h2>
+                <canvas id="horizontalChart"></canvas>
+            </div>
         </div>
     </div>
 
     <script>
-        let chartInstance = null;
+        let chartInstances = {
+            bar: null,
+            pie: null,
+            line: null,
+            horizontal: null
+        };
         const API_URL = 'https://api-lua.s4h.edu.vn/stats';
         const API_SUMMARY_URL = 'https://api-lua.s4h.edu.vn/summary';
         
@@ -389,78 +424,296 @@
         }
 
         function renderChart(data) {
-            const ctx = document.getElementById('cameraChart').getContext('2d');
-            
             const labels = Object.keys(data);
             const successData = Object.values(data).map(stats => stats.total_attempts - stats.failed_attempts);
             const failureData = Object.values(data).map(stats => stats.failed_attempts);
+            const totalAttempts = Object.values(data).map(stats => stats.total_attempts);
+            const successRates = Object.values(data).map(stats => 
+                calculateSuccessRate(stats.total_attempts, stats.failed_attempts)
+            );
 
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
+            // Gradient colors
+            const successGradient = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0'];
+            const failureGradient = ['#ef4444', '#f87171', '#fca5a5', '#fecaca'];
 
-            chartInstance = new Chart(ctx, {
+            // 1. Biểu đồ cột (Bar Chart)
+            const ctxBar = document.getElementById('cameraChart').getContext('2d');
+            if (chartInstances.bar) chartInstances.bar.destroy();
+            
+            chartInstances.bar = new Chart(ctxBar, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Kết nối thành công',
+                            label: '✅ Kết nối thành công',
                             data: successData,
-                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.85)',
                             borderColor: 'rgba(16, 185, 129, 1)',
-                            borderWidth: 2
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            borderSkipped: false,
                         },
                         {
-                            label: 'Kết nối thất bại',
+                            label: '❌ Kết nối thất bại',
                             data: failureData,
-                            backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.85)',
                             borderColor: 'rgba(239, 68, 68, 1)',
-                            borderWidth: 2
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            borderSkipped: false,
                         }
                     ]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
                     plugins: {
                         legend: {
                             position: 'top',
                             labels: {
-                                font: { size: 14 },
-                                padding: 20
+                                font: { size: 13, weight: 'bold' },
+                                padding: 15,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
                             }
                         },
                         tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            backgroundColor: 'rgba(0, 0, 0, 0.85)',
                             padding: 12,
-                            titleFont: { size: 14 },
-                            bodyFont: { size: 13 }
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1,
+                            displayColors: true,
+                            callbacks: {
+                                footer: (items) => {
+                                    const index = items[0].dataIndex;
+                                    const total = totalAttempts[index];
+                                    return `Tổng: ${total} lần kết nối`;
+                                }
+                            }
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
                             grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
                             },
                             ticks: {
-                                stepSize: 1
+                                stepSize: 1,
+                                font: { size: 11 }
                             }
                         },
                         x: {
-                            grid: {
-                                display: false
-                            },
+                            grid: { display: false },
                             ticks: {
                                 maxRotation: 45,
-                                minRotation: 45
+                                minRotation: 45,
+                                font: { size: 10 }
                             }
                         }
                     }
                 }
             });
 
-            document.getElementById('chartContainer').style.display = 'block';
+            // 2. Biểu đồ tròn (Pie Chart) - Phân bố lỗi
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            if (chartInstances.pie) chartInstances.pie.destroy();
+
+            const totalSuccess = successData.reduce((a, b) => a + b, 0);
+            const totalFailure = failureData.reduce((a, b) => a + b, 0);
+            
+            chartInstances.pie = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['✅ Thành công', '❌ Thất bại'],
+                    datasets: [{
+                        data: [totalSuccess, totalFailure],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.85)',
+                            'rgba(239, 68, 68, 0.85)',
+                        ],
+                        borderColor: ['#10b981', '#ef4444'],
+                        borderWidth: 3,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 13, weight: 'bold' },
+                                padding: 20,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                            padding: 12,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                label: (context) => {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = totalSuccess + totalFailure;
+                                    const percent = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percent}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 3. Biểu đồ đường (Line Chart) - Tỷ lệ thành công
+            const ctxLine = document.getElementById('lineChart').getContext('2d');
+            if (chartInstances.line) chartInstances.line.destroy();
+            
+            chartInstances.line = new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '📈 Tỷ lệ thành công (%)',
+                        data: successRates,
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        pointBackgroundColor: 'rgba(99, 102, 241, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(99, 102, 241, 1)',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 13, weight: 'bold' },
+                                padding: 15,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                            padding: 12,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                label: (context) => {
+                                    return `Tỷ lệ: ${context.parsed.y}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                callback: (value) => value + '%',
+                                font: { size: 11 }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                font: { size: 10 }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 4. Biểu đồ ngang (Horizontal Bar) - So sánh
+            const ctxHorizontal = document.getElementById('horizontalChart').getContext('2d');
+            if (chartInstances.horizontal) chartInstances.horizontal.destroy();
+            
+            chartInstances.horizontal = new Chart(ctxHorizontal, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '📊 Tổng kết nối',
+                        data: totalAttempts,
+                        backgroundColor: labels.map((_, i) => {
+                            const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#a855f7', '#14b8a6'];
+                            return colors[i % colors.length];
+                        }),
+                        borderColor: labels.map((_, i) => {
+                            const colors = ['#4f46e5', '#7c3aed', '#db2777', '#e11d48', '#d97706', '#059669', '#0891b2', '#2563eb', '#9333ea', '#0d9488'];
+                            return colors[i % colors.length];
+                        }),
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                            padding: 12,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                font: { size: 11 }
+                            }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { size: 10 }
+                            }
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('chartsWrapper').style.display = 'grid';
+            document.getElementById('chartsWrapper2').style.display = 'grid';
         }
 
         async function loadData() {
