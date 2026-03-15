@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slido Minigame – Sắp Bắt Đầu</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue:   #4285F4;
+    --red:    #EA4335;
+    --yellow: #FBBC05;
+    --green:  #34A853;
+    --bg:     #F8F9FA;
+    --surface: #FFFFFF;
+    --text:   #202124;
+    --muted:  #5F6368;
+    --border: #DADCE0;
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'Nunito', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border-radius: 28px;
+    padding: 56px 48px 48px;
+    max-width: 520px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
+    animation: rise 0.55s cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  @keyframes rise {
+    from { opacity:0; transform: translateY(28px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  /* ── LOGO DOTS ── */
+  .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 36px;
+  }
+  .dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    animation: bounce 1.4s ease-in-out infinite;
+  }
+  .dot:nth-child(1) { background: var(--blue);   animation-delay: 0s; }
+  .dot:nth-child(2) { background: var(--red);    animation-delay: .15s; }
+  .dot:nth-child(3) { background: var(--yellow); animation-delay: .30s; }
+  .dot:nth-child(4) { background: var(--blue);   animation-delay: .45s; }
+  .dot:nth-child(5) { background: var(--green);  animation-delay: .60s; }
+  .dot:nth-child(6) { background: var(--red);    animation-delay: .75s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30%           { transform: translateY(-8px); }
+  }
+
+  /* ── ICON LOCK ── */
+  .icon-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #E8F0FE, #FEF7E0);
+    margin-bottom: 24px;
+    font-size: 36px;
+  }
+
+  /* ── RAINBOW TITLE ── */
+  h1 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  .g { color: var(--blue);   }
+  .o { color: var(--red);    }
+  .o2{ color: var(--yellow); }
+  .g2{ color: var(--blue);   }
+  .l { color: var(--green);  }
+  .e { color: var(--red);    }
+
+  .subtitle {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 36px;
+  }
+  .subtitle strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .divider-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .divider-text {
+    font-size: 13px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ── TIMER ── */
+  .timer-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .timer {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 36px;
+  }
+  .time-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .time-num {
+    font-family: 'Nunito', monospace;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text);
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 8px 16px;
+    min-width: 72px;
+    text-align: center;
+    border: 1px solid var(--border);
+    transition: background 0.3s;
+  }
+  .time-block:nth-child(1) .time-num { border-color: var(--blue);   background: #E8F0FE; color: var(--blue); }
+  .time-block:nth-child(3) .time-num { border-color: var(--red);    background: #FCE8E6; color: var(--red); }
+  .time-block:nth-child(5) .time-num { border-color: var(--yellow); background: #FEF7E0; color: #B06000; }
+  .time-block:nth-child(7) .time-num { border-color: var(--green);  background: #E6F4EA; color: var(--green); }
+  .time-unit {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .time-colon {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--border);
+    align-self: flex-start;
+    padding-top: 12px;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* ── STATUS BADGE ── */
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: #FEF7E0;
+    border: 1px solid var(--yellow);
+    border-radius: 99px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #B06000;
+    margin-bottom: 28px;
+  }
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--yellow);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100%{ transform:scale(1); opacity:1; }
+    50%    { transform:scale(1.4); opacity:0.7; }
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    margin-top: 40px;
+    font-size: 12px;
+    color: #BDC1C6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .footer span { color: #BDC1C6; }
+
+  /* ── RAINBOW BOTTOM BAR ── */
+  .rainbow-bar {
+    width: 100%;
+    max-width: 520px;
+    height: 4px;
+    border-radius: 0 0 28px 28px;
+    background: linear-gradient(90deg,
+      var(--blue)   0%,
+      var(--blue)   25%,
+      var(--red)    25%,
+      var(--red)    50%,
+      var(--yellow) 50%,
+      var(--yellow) 75%,
+      var(--green)  75%,
+      var(--green)  100%
+    );
+    margin-top: -4px;
+    animation: slideRight 2s cubic-bezier(0.16,1,0.3,1) 0.5s both;
+  }
+  @keyframes slideRight {
+    from { clip-path: inset(0 100% 0 0); }
+    to   { clip-path: inset(0 0% 0 0); }
+  }
+
+  @media (max-width: 480px) {
+    .card { padding: 40px 24px 36px; border-radius: 20px; }
+    h1 { font-size: 22px; }
+    .time-num { font-size: 28px; min-width: 58px; padding: 6px 12px; }
+    .time-colon { font-size: 24px; padding-top: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- Bouncing colored dots -->
+  <div class="logo">
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+
+  <!-- Lock icon -->
+  <div class="icon-wrap">⏳</div>
+
+  <!-- Title -->
+  <h1>Slido Minigame<br><span class="g">C</span><span class="o">h</span><span class="o2">ư</span><span class="g2">a</span> <span class="l">B</span><span class="e">ắ</span><span class="g">t</span> <span class="o">Đ</span><span class="o2">ầ</span><span class="g2">u</span></h1>
+
+  <p class="subtitle">
+    Minigame sẽ chính thức mở lúc <strong>14:00 ngày 25/03/2026</strong>.<br>
+    Giữ nguyên trang này — đồng hồ đang đếm ngược cho bạn!
+  </p>
+
+  <!-- Status -->
+  <div class="status">
+    <span class="status-dot"></span>
+    Đang chờ người dẫn chương trình mở cửa
+  </div>
+
+  <!-- Divider -->
+  <div class="divider">
+    <div class="divider-line"></div>
+    <span class="divider-text">Bắt đầu sau</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- Countdown Timer -->
+  <p class="timer-label">Đếm ngược</p>
+  <div class="timer">
+    <div class="time-block">
+      <div class="time-num" id="hh">00</div>
+      <div class="time-unit">Giờ</div>
+    </div>
+    <div class="time-colon">:</div>
+    <div class="time-block">
+      <div class="time-num" id="mm">05</div>
+      <div class="time-unit">Phút</div>
+    </div>
+    <div class="time-colon">:</div>
+    <div class="time-block">
+      <div class="time-num" id="ss">00</div>
+      <div class="time-unit">Giây</div>
+    </div>
+    <div class="time-colon">:</div>
+    <div class="time-block">
+      <div class="time-num" id="ms">00</div>
+      <div class="time-unit">Mili</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="rainbow-bar"></div>
+
+<!-- Footer -->
+<div class="footer">
+  <span>Hội Trần &amp; Nguyên Phạm &nbsp;·&nbsp; Google Student Ambassadors</span>
+</div>
+
+<script>
+  // Target: 25/03/2026 14:00 Giờ Việt Nam (UTC+7)
+  const target = new Date('2026-03-25T14:00:00+07:00').getTime();
+
+  const hh = document.getElementById('hh');
+  const mm = document.getElementById('mm');
+  const ss = document.getElementById('ss');
+  const ms = document.getElementById('ms');
+
+  function pad(n, w=2) { return String(n).padStart(w,'0'); }
+
+  function tick() {
+    const diff = Math.max(0, target - Date.now());
+    if (diff === 0) {
+      hh.textContent = mm.textContent = ss.textContent = ms.textContent = '00';
+      // Auto-redirect when done (optional)
+      // window.location.href = 'slido-minigame.html';
+      return;
+    }
+    const totalSec = Math.floor(diff / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    const milli = Math.floor((diff % 1000) / 10);
+    hh.textContent = pad(h);
+    mm.textContent = pad(m);
+    ss.textContent = pad(s);
+    ms.textContent = pad(milli);
+    requestAnimationFrame(tick);
+  }
+  tick();
+</script>
+</body>
+</html>
