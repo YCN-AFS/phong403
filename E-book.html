@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>50 Prompts Tối Thượng – Chưa Mở</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue:   #4285F4;
+    --red:    #EA4335;
+    --yellow: #FBBC05;
+    --green:  #34A853;
+    --bg:     #F8F9FA;
+    --surface: #FFFFFF;
+    --text:   #202124;
+    --muted:  #5F6368;
+    --border: #DADCE0;
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'Nunito', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border-radius: 28px;
+    padding: 52px 48px 44px;
+    max-width: 560px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
+    animation: rise 0.55s cubic-bezier(0.16,1,0.3,1) both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  @keyframes rise {
+    from { opacity:0; transform: translateY(28px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  /* ── DOTS ── */
+  .dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 32px;
+  }
+  .dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    animation: bounce 1.4s ease-in-out infinite;
+  }
+  .dot:nth-child(1) { background: var(--blue);   animation-delay: 0s; }
+  .dot:nth-child(2) { background: var(--red);    animation-delay: .15s; }
+  .dot:nth-child(3) { background: var(--yellow); animation-delay: .30s; }
+  .dot:nth-child(4) { background: var(--green);  animation-delay: .45s; }
+  @keyframes bounce {
+    0%,60%,100% { transform: translateY(0); }
+    30%         { transform: translateY(-7px); }
+  }
+
+  /* ── LOCK ICON ── */
+  .icon-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 88px; height: 88px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #E8F0FE 0%, #FEF7E0 50%, #FCE8E6 100%);
+    margin-bottom: 24px;
+    font-size: 40px;
+  }
+  /* subtle shimmer ring */
+  .icon-wrap::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px dashed var(--border);
+    animation: spin 12s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── HEADING ── */
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .num {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .num .n1 { color: var(--blue); }
+  .num .n2 { color: var(--red); }
+
+  .tagline {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .tagline .w1 { color: var(--yellow); }
+  .tagline .w2 { color: var(--green); }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.65;
+    margin: 16px 0 28px;
+  }
+  .subtitle strong { color: var(--text); font-weight: 700; }
+
+  /* ── PROMPT PREVIEW PILLS ── */
+  .preview {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 600;
+    filter: blur(5px);
+    user-select: none;
+    pointer-events: none;
+    opacity: 0.55;
+  }
+  .pill.blue   { background:#E8F0FE; color:var(--blue); }
+  .pill.red    { background:#FCE8E6; color:var(--red); }
+  .pill.yellow { background:#FEF7E0; color:#B06000; }
+  .pill.green  { background:#E6F4EA; color:var(--green); }
+
+  .blur-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .blur-label::before,
+  .blur-label::after {
+    content: '';
+    flex: 1;
+    max-width: 60px;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── STATUS BADGE ── */
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: #FCE8E6;
+    border: 1px solid var(--red);
+    border-radius: 99px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--red);
+    margin-bottom: 28px;
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { transform:scale(1); opacity:1; }
+    50%     { transform:scale(1.5); opacity:0.6; }
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .divider-line { flex:1; height:1px; background:var(--border); }
+  .divider-text { font-size:12px; color:var(--muted); white-space:nowrap; }
+
+  /* ── COUNTDOWN ── */
+  .timer-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+  }
+  .timer {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+  .time-block { display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .time-num {
+    font-size: 34px;
+    font-weight: 800;
+    border-radius: 12px;
+    padding: 8px 16px;
+    min-width: 70px;
+    text-align: center;
+    border: 1.5px solid;
+    transition: color 0.3s;
+  }
+  .time-block:nth-child(1) .time-num { border-color:var(--blue);   background:#E8F0FE; color:var(--blue); }
+  .time-block:nth-child(3) .time-num { border-color:var(--red);    background:#FCE8E6; color:var(--red); }
+  .time-block:nth-child(5) .time-num { border-color:var(--yellow); background:#FEF7E0; color:#B06000; }
+  .time-block:nth-child(7) .time-num { border-color:var(--green);  background:#E6F4EA; color:var(--green); }
+  .time-unit {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .time-colon {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--border);
+    align-self: flex-start;
+    padding-top: 12px;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* ── UNLOCK HINT ── */
+  .unlock-hint {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 20px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .unlock-hint strong { color: var(--text); }
+  .unlock-hint .step {
+    display: inline-block;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 20px;
+    text-align: center;
+    margin-right: 4px;
+  }
+  .s1 { background:#E8F0FE; color:var(--blue); }
+  .s2 { background:#FEF7E0; color:#B06000; }
+  .s3 { background:#E6F4EA; color:var(--green); }
+
+  /* ── RAINBOW BAR ── */
+  .rainbow-bar {
+    width: 100%;
+    max-width: 560px;
+    height: 4px;
+    border-radius: 0 0 28px 28px;
+    background: linear-gradient(90deg,
+      var(--blue)   0%,   var(--blue)   25%,
+      var(--red)    25%,  var(--red)    50%,
+      var(--yellow) 50%,  var(--yellow) 75%,
+      var(--green)  75%,  var(--green)  100%
+    );
+    margin-top: -4px;
+    animation: slideRight 2s cubic-bezier(0.16,1,0.3,1) 0.5s both;
+  }
+  @keyframes slideRight {
+    from { clip-path: inset(0 100% 0 0); }
+    to   { clip-path: inset(0 0% 0 0); }
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    margin-top: 32px;
+    font-size: 12px;
+    color: #BDC1C6;
+    text-align: center;
+  }
+
+  @media (max-width: 480px) {
+    .card { padding: 36px 20px 32px; }
+    h1 { font-size: 24px; }
+    .num { font-size: 38px; }
+    .time-num { font-size: 26px; min-width: 56px; padding: 6px 10px; }
+    .time-colon { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <div class="dots">
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+
+  <div class="icon-wrap">🔒</div>
+
+  <p class="eyebrow">E-book độc quyền</p>
+  <h1>
+    <span class="num"><span class="n1">5</span><span class="n2">0</span></span>
+    <span class="tagline">Prompts <span class="w1">Tối</span> <span class="w2">Thượng</span></span>
+    cho Coder
+  </h1>
+
+  <p class="subtitle">
+    Tuyển chọn <strong>50 prompt thực chiến</strong> giúp bạn pair-program cùng AI,<br>
+    debug nhanh hơn, viết code sạch hơn — và không bao giờ bí ý tưởng nữa.<br><br>
+    Tài liệu sẽ được mở sau buổi <strong>Q&A &amp; Wrap-up</strong> lúc <strong>14:40 ngày 25/03/2026</strong>.
+  </p>
+
+  <!-- Blurred prompt preview -->
+  <div class="preview">
+    <div class="pill blue">🐛 Debug SQL Injection</div>
+    <div class="pill red">⚡ Tối ưu vòng lặp O(n²)</div>
+    <div class="pill yellow">🏗️ Clean Architecture</div>
+    <div class="pill green">🔐 Parameterized Query</div>
+    <div class="pill blue">📦 Refactor thành module</div>
+    <div class="pill red">🧪 Viết unit test tự động</div>
+    <div class="pill yellow">🤖 Sinh mock data JSON</div>
+    <div class="pill green">💬 Code review toàn diện</div>
+  </div>
+  <p class="blur-label">Nội dung bị ẩn cho đến khi mở khóa</p>
+
+  <!-- Status -->
+  <div class="status">
+    <span class="status-dot"></span>
+    Đang khóa · Chưa đến giờ mở
+  </div>
+
+  <!-- Countdown -->
+  <div class="divider">
+    <div class="divider-line"></div>
+    <span class="divider-text">Mở khóa sau</span>
+    <div class="divider-line"></div>
+  </div>
+  <p class="timer-label">Đếm ngược</p>
+  <div class="timer">
+    <div class="time-block">
+      <div class="time-num" id="hh">00</div>
+      <div class="time-unit">Giờ</div>
+    </div>
+    <div class="time-colon">:</div>
+    <div class="time-block">
+      <div class="time-num" id="mm">00</div>
+      <div class="time-unit">Phút</div>
+    </div>
+    <div class="time-colon">:</div>
+    <div class="time-block">
+      <div class="time-num" id="ss">00</div>
+      <div class="time-unit">Giây</div>
+    </div>
+    <div class="time-colon">:</div>
+    <div class="time-block">
+      <div class="time-num" id="ms">00</div>
+      <div class="time-unit">Mili</div>
+    </div>
+  </div>
+
+  <!-- How to unlock -->
+  <div class="unlock-hint">
+    <span class="step s1">1</span> Tham gia buổi workshop đến cuối &nbsp;→&nbsp;
+    <span class="step s2">2</span> Quét QR điền feedback form &nbsp;→&nbsp;
+    <span class="step s3">3</span> <strong>Nhận link tải ngay!</strong>
+  </div>
+
+</div>
+
+<div class="rainbow-bar"></div>
+
+<div class="footer">
+  Hội Trần &amp; Nguyên Phạm · Google Student Ambassadors
+</div>
+
+<script>
+  // Mở lúc 14:40 ngày 25/03/2026 giờ Việt Nam (UTC+7)
+  const target = new Date('2026-03-25T14:40:00+07:00').getTime();
+
+  const hh = document.getElementById('hh');
+  const mm = document.getElementById('mm');
+  const ss = document.getElementById('ss');
+  const ms = document.getElementById('ms');
+
+  function pad(n) { return String(n).padStart(2,'0'); }
+
+  function tick() {
+    const diff = Math.max(0, target - Date.now());
+    const totalSec = Math.floor(diff / 1000);
+    hh.textContent = pad(Math.floor(totalSec / 3600));
+    mm.textContent = pad(Math.floor((totalSec % 3600) / 60));
+    ss.textContent = pad(totalSec % 60);
+    ms.textContent = pad(Math.floor((diff % 1000) / 10));
+    if (diff > 0) requestAnimationFrame(tick);
+  }
+  tick();
+</script>
+</body>
+</html>
