@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Content-Security-Policy" content="frame-src https://ok.ru https://*.ok.ru; default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com;">
+  <title>Lúa Farm – Hệ Thống Camera Giám Sát</title>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --green-dark:  #1a3a2a;
+      --green-mid:   #2d6a4f;
+      --green-light: #52b788;
+      --green-pale:  #b7e4c7;
+      --gold:        #d4a017;
+      --gold-light:  #f0c040;
+      --bg:          #f4f7f4;
+      --surface:     #ffffff;
+      --surface2:    #eef3ef;
+      --border:      #cde0d2;
+      --text:        #1a2e22;
+      --muted:       #6b8f72;
+      --shadow:      0 2px 12px rgba(45,106,79,0.10);
+      --shadow-lg:   0 8px 32px rgba(45,106,79,0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Be Vietnam Pro', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--green-dark);
+      padding: 0 28px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--green-light), var(--gold));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .brand-text h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+    }
+
+    .brand-text p {
+      font-size: 0.7rem;
+      color: var(--green-pale);
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 0.72rem;
+      color: #fff;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.08em;
+    }
+
+    .live-dot {
+      width: 7px; height: 7px;
+      background: #4ade80;
+      border-radius: 50%;
+      animation: blink 1.5s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+
+    #clock {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--green-pale);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 28px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toolbar-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-right: 4px;
+    }
+
+    .btn-layout {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.18s;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .btn-layout:hover {
+      border-color: var(--green-mid);
+      color: var(--green-mid);
+      background: #e8f3ec;
+    }
+
+    .btn-layout.active {
+      background: var(--green-mid);
+      border-color: var(--green-mid);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(45,106,79,0.3);
+    }
+
+    .toolbar-sep {
+      width: 1px; height: 22px;
+      background: var(--border);
+      margin: 0 6px;
+    }
+
+    .cam-stat {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .cam-stat strong {
+      color: var(--green-mid);
+      font-weight: 700;
+    }
+
+    /* ── GRID ── */
+    .grid-wrap {
+      padding: 16px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(2, 1fr);
+      transition: all 0.3s ease;
+    }
+
+    .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+    /* ── CAMERA CARD ── */
+    .cam-card {
+      background: var(--surface);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      transition: box-shadow 0.2s, transform 0.2s;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .cam-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .cam-header {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cam-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cam-num-badge {
+      background: var(--green-mid);
+      color: #fff;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.06em;
+    }
+
+    .cam-name {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .cam-status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.65rem;
+      color: #16a34a;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .cam-status-dot {
+      width: 6px; height: 6px;
+      background: #4ade80;
+      border-radius: 50%;
+      animation: blink 1.5s ease-in-out infinite;
+    }
+
+    .cam-video {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #0d1a10;
+    }
+
+    .cam-video iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 18px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      margin-top: 8px;
+    }
+
+    footer strong { color: var(--green-mid); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .grid.cols-2,
+      .grid.cols-3,
+      .grid.cols-4 { grid-template-columns: 1fr; }
+      header { padding: 0 16px; }
+      .toolbar { padding: 10px 16px; }
+      .grid-wrap { padding: 10px; }
+      #clock { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="brand">
+    <div class="brand-icon">🌾</div>
+    <div class="brand-text">
+      <h1>Lúa Farm</h1>
+      <p>Hệ thống camera giám sát</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-badge">
+      <span class="live-dot"></span>
+      TRỰC TIẾP
+    </div>
+    <span id="clock">--:--:--</span>
+  </div>
+</header>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <span class="toolbar-label">Bố cục</span>
+  <button class="btn-layout active" onclick="setLayout(2, this)">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+      <rect x="0" y="0" width="6" height="6" rx="1"/><rect x="8" y="0" width="6" height="6" rx="1"/>
+      <rect x="0" y="8" width="6" height="6" rx="1"/><rect x="8" y="8" width="6" height="6" rx="1"/>
+    </svg>
+    2 Cột
+  </button>
+  <button class="btn-layout" onclick="setLayout(3, this)">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+      <rect x="0" y="0" width="3.5" height="6" rx="1"/><rect x="5.25" y="0" width="3.5" height="6" rx="1"/><rect x="10.5" y="0" width="3.5" height="6" rx="1"/>
+      <rect x="0" y="8" width="3.5" height="6" rx="1"/><rect x="5.25" y="8" width="3.5" height="6" rx="1"/><rect x="10.5" y="8" width="3.5" height="6" rx="1"/>
+    </svg>
+    3 Cột
+  </button>
+  <button class="btn-layout" onclick="setLayout(4, this)">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+      <rect x="0" y="0" width="2.5" height="6" rx="1"/><rect x="3.8" y="0" width="2.5" height="6" rx="1"/>
+      <rect x="7.6" y="0" width="2.5" height="6" rx="1"/><rect x="11.4" y="0" width="2.5" height="6" rx="1"/>
+      <rect x="0" y="8" width="2.5" height="6" rx="1"/><rect x="3.8" y="8" width="2.5" height="6" rx="1"/>
+      <rect x="7.6" y="8" width="2.5" height="6" rx="1"/><rect x="11.4" y="8" width="2.5" height="6" rx="1"/>
+    </svg>
+    4 Cột
+  </button>
+  <div class="toolbar-sep"></div>
+  <div class="cam-stat">
+    <strong>10</strong> camera đang hoạt động
+  </div>
+</div>
+
+<!-- GRID -->
+<div class="grid-wrap">
+  <div class="grid cols-2" id="grid"></div>
+</div>
+
+<footer>
+  &copy; 2025 <strong>Lúa Farm</strong> — Hệ thống giám sát nông trại thông minh
+</footer>
+
+<script>
+  const cameras = [
+    { id: "CAM-01", name: "Khu A – Cánh đồng 1", src: "https://ok.ru/videoembed/17800280874588?nochat=1" },
+    { id: "CAM-02", name: "Khu A – Cánh đồng 2", src: "https://ok.ru/videoembed/17800315608668?nochat=1" },
+    { id: "CAM-03", name: "Khu B – Cánh đồng 3", src: "https://ok.ru/videoembed/17800336186972?nochat=1" },
+    { id: "CAM-04", name: "Khu B – Cánh đồng 4", src: "https://ok.ru/videoembed/17800359517788?nochat=1" },
+    { id: "CAM-05", name: "Khu C – Lối vào chính", src: "https://ok.ru/videoembed/17800378785372?nochat=1" },
+    { id: "CAM-06", name: "Khu C – Nhà kho",      src: "https://ok.ru/videoembed/17800394972764?nochat=1" },
+    { id: "CAM-07", name: "Khu D – Ao nước",       src: "https://ok.ru/videoembed/17800421121628?nochat=1" },
+    { id: "CAM-08", name: "Khu D – Bờ đê",         src: "https://ok.ru/videoembed/17800438816348?nochat=1" },
+    { id: "CAM-09", name: "Khu E – Mương tưới",    src: "https://ok.ru/videoembed/17800456838748?nochat=1" },
+    { id: "CAM-10", name: "Khu E – Trạm bơm",      src: "https://ok.ru/videoembed/17800474926684?nochat=1" },
+  ];
+
+  const grid = document.getElementById('grid');
+
+  cameras.forEach((cam, i) => {
+    const card = document.createElement('div');
+    card.className = 'cam-card';
+    card.style.animationDelay = `${i * 0.05}s`;
+    card.innerHTML = `
+      <div class="cam-header">
+        <div class="cam-title">
+          <span class="cam-num-badge">${cam.id}</span>
+          <span class="cam-name">${cam.name}</span>
+        </div>
+        <div class="cam-status">
+          <span class="cam-status-dot"></span>Online
+        </div>
+      </div>
+      <div class="cam-video">
+        <iframe
+          src="${cam.src}"
+          allow="autoplay; fullscreen"
+          allowfullscreen
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  function setLayout(cols, btn) {
+    grid.className = `grid cols-${cols}`;
+    document.querySelectorAll('.btn-layout').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // Clock
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toLocaleTimeString('vi-VN', { hour12: false });
+  }
+  tick();
+  setInterval(tick, 1000);
+</script>
+</body>
+</html>
